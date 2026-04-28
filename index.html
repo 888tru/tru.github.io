@@ -1,0 +1,1927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Signatures Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --card: rgba(18, 18, 26, 0.72);
+      --text: #e9ecff;
+      --muted: #9ca3c5;
+      --purple: #6c63ff;
+      --cyan: #00d4ff;
+      --green: #33d17a;
+      --red: #ff5d6c;
+      --yellow: #ffd24a;
+      --border: rgba(255,255,255,0.14);
+      --shadow: 0 12px 34px rgba(0,0,0,0.34);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    .bg-gradient {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background:
+        radial-gradient(circle at 15% 15%, rgba(108,99,255,0.22), transparent 35%),
+        radial-gradient(circle at 80% 20%, rgba(0,212,255,0.2), transparent 38%),
+        radial-gradient(circle at 70% 85%, rgba(108,99,255,0.18), transparent 40%),
+        linear-gradient(120deg, #090913, #0d1022, #0a0a0f);
+      background-size: 180% 180%;
+      animation: gradientFlow 28s ease-in-out infinite;
+    }
+
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background-image: linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+      opacity: 0.28;
+    }
+
+    .container {
+      width: min(1120px, 96vw);
+      margin: 22px auto 48px;
+      position: relative;
+    }
+
+    .glass {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: var(--shadow);
+    }
+
+    .top {
+      position: sticky;
+      top: 14px;
+      z-index: 50;
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+
+    .progress-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .progress-title { font-weight: 700; letter-spacing: 0.3px; font-size: 0.95rem; }
+    .progress-sub { color: var(--muted); font-size: 0.86rem; }
+
+    .progress-wrap {
+      background: rgba(255,255,255,0.1);
+      height: 10px;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.14);
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--purple), var(--cyan));
+      box-shadow: 0 0 16px rgba(108,99,255,0.8);
+      transition: width 0.55s ease;
+    }
+
+    .module-tabs {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(96px, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .module-tab {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 7px;
+      cursor: pointer;
+      transition: transform .2s ease, border-color .2s ease, background .2s ease;
+      font-size: 0.8rem;
+      min-height: 54px;
+    }
+
+    .module-tab:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(0,212,255,0.5); }
+    .module-tab.active { border-color: var(--cyan); background: rgba(0,212,255,0.12); }
+    .module-tab:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    #moduleRoot { padding: 18px; }
+    .module-card { padding: 24px; }
+
+    h1, h2, h3, h4 { margin: 0; }
+
+    .module-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .title {
+      font-size: clamp(1.35rem, 3vw, 2rem);
+      font-weight: 800;
+      margin-bottom: 8px;
+      background: linear-gradient(90deg, #fff, #d5d9ff 50%, #9ceeff 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin: 0;
+      line-height: 1.6;
+      max-width: 900px;
+      font-size: 1rem;
+    }
+
+    .inside-step {
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 8px 12px;
+      border-radius: 999px;
+      color: #d6dcff;
+      font-size: 0.92rem;
+      white-space: nowrap;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .step-screen {
+      min-height: 520px;
+      display: grid;
+      align-content: start;
+      gap: 14px;
+      padding-top: 8px;
+    }
+
+    .concept-text {
+      font-size: clamp(18px, 2vw, 24px);
+      line-height: 1.5;
+    }
+
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+    .stack { display: grid; gap: 12px; }
+
+    .mini-card {
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .centered-focus {
+      min-height: 430px;
+      display: grid;
+      place-content: center;
+      gap: 20px;
+      text-align: center;
+    }
+
+    .big-symbol {
+      font-size: clamp(3rem, 9vw, 6rem);
+      line-height: 1;
+      filter: drop-shadow(0 0 24px rgba(108,99,255,.4));
+    }
+
+    .rule-card {
+      padding: 20px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      font-size: clamp(18px, 2.2vw, 30px);
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    .char-card {
+      position: relative;
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .char-card.alice { box-shadow: inset 0 0 0 1px rgba(108,99,255,0.3); }
+    .char-card.bob { box-shadow: inset 0 0 0 1px rgba(0,212,255,0.3); }
+    .char-card.eve { box-shadow: inset 0 0 0 1px rgba(255,93,108,0.55); background: rgba(63, 18, 27, 0.6); }
+    .char-name { font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; }
+    .char-line { color: #d8dbf8; font-size: 1.05rem; line-height: 1.45; }
+
+    .envelope-track {
+      margin: 10px 2px;
+      position: relative;
+      height: 64px;
+      border-radius: 30px;
+      border: 1px dashed rgba(255,255,255,0.22);
+      overflow: hidden;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .envelope {
+      position: absolute;
+      top: 12px;
+      left: 4%;
+      font-size: 1.9rem;
+      animation: travelEnvelope 8s ease-in-out infinite;
+      filter: drop-shadow(0 0 10px rgba(108,99,255,.8));
+    }
+
+    .evil-flash {
+      position: absolute;
+      top: 0;
+      left: 44%;
+      width: 12%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,93,108,0.7), transparent);
+      animation: evilPulse 2s ease-in-out infinite;
+    }
+
+    .quiz-options { display: grid; gap: 10px; margin-top: 14px; }
+    .quiz-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+      font-size: 1.05rem;
+    }
+
+    .hint { color: var(--red); min-height: 22px; font-weight: 600; margin-top: 8px; font-size: 1rem; }
+    .success-note { color: var(--green); font-weight: 700; }
+
+    .btn {
+      border: 1px solid rgba(108,99,255,0.45);
+      background: linear-gradient(110deg, rgba(108,99,255,0.25), rgba(0,212,255,0.15));
+      color: #f4f6ff;
+      border-radius: 11px;
+      padding: 11px 15px;
+      cursor: pointer;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+      font-size: 1rem;
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 0 18px rgba(108,99,255,0.58), 0 0 22px rgba(0,212,255,0.32);
+      filter: brightness(1.04);
+    }
+
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .btn-secondary {
+      border-color: rgba(0,212,255,0.45);
+      background: linear-gradient(110deg, rgba(0,212,255,0.22), rgba(108,99,255,0.16));
+    }
+
+    .btn-danger {
+      border-color: rgba(255,93,108,0.55);
+      background: linear-gradient(110deg, rgba(255,93,108,0.25), rgba(115,30,30,0.18));
+    }
+
+    input[type="text"], textarea {
+      width: 100%;
+      border-radius: 11px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(11, 12, 20, 0.75);
+      color: #fff;
+      padding: 12px;
+      font: inherit;
+      outline: none;
+      transition: border-color .2s ease, box-shadow .2s ease;
+      font-size: 1rem;
+    }
+
+    input[type="text"]:focus, textarea:focus {
+      border-color: rgba(0,212,255,0.7);
+      box-shadow: 0 0 0 3px rgba(0,212,255,0.18);
+    }
+
+    textarea { min-height: 130px; resize: vertical; }
+
+    code.hash {
+      word-break: break-all;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.9rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.14);
+      padding: 10px;
+      border-radius: 10px;
+      display: block;
+      line-height: 1.55;
+      margin-top: 8px;
+    }
+
+    details.reveal {
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      padding: 8px 10px;
+      margin-top: 8px;
+    }
+
+    details.reveal summary {
+      cursor: pointer;
+      color: #d9deff;
+      font-weight: 600;
+      list-style: none;
+      font-size: 0.96rem;
+    }
+
+    details.reveal summary::-webkit-details-marker { display: none; }
+
+    .hash-diff span.same { color: #dfe5ff; }
+    .hash-diff span.diffA { color: var(--red); font-weight: 700; }
+    .hash-diff span.diffB { color: var(--cyan); font-weight: 700; }
+
+    .hash-box {
+      border: 1px solid rgba(0,212,255,.4);
+      border-radius: 12px;
+      background: rgba(0,212,255,0.06);
+      padding: 14px;
+      box-shadow: inset 0 0 22px rgba(0,212,255,0.07);
+    }
+
+    .hash-machine {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .machine-box {
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 16px;
+      background: rgba(255,255,255,0.03);
+      text-align: center;
+      font-size: 1.15rem;
+    }
+
+    .gear {
+      width: 64px;
+      height: 64px;
+      border: 3px dashed rgba(0,212,255,.7);
+      border-radius: 50%;
+      margin: 0 auto 8px;
+      animation: spin 2.4s linear infinite;
+    }
+
+    .arrow {
+      height: 3px;
+      background: linear-gradient(90deg, var(--purple), var(--cyan));
+      position: relative;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .particle-flow::after {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      background: repeating-linear-gradient(90deg, rgba(255,255,255,0) 0 10px, rgba(255,255,255,.85) 10px 14px);
+      mix-blend-mode: screen;
+      animation: flow 1.2s linear infinite;
+    }
+
+    .load { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; color: #cbeeff; }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,.22);
+      border-top-color: var(--cyan);
+      animation: spin .8s linear infinite;
+    }
+
+    .key-card {
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 14px;
+      background: rgba(255,255,255,0.03);
+      min-height: 200px;
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .key-card.public { box-shadow: 0 0 18px rgba(0,212,255,0.2); border-color: rgba(0,212,255,0.45); }
+    .key-card.private { box-shadow: 0 0 18px rgba(108,99,255,0.24); border-color: rgba(108,99,255,0.45); }
+
+    .warning {
+      background: rgba(255,93,108,0.16);
+      border: 1px solid rgba(255,93,108,0.5);
+      color: #ffd9dd;
+      padding: 8px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+
+    .choice-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+
+    .choice-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      min-height: 90px;
+      background: rgba(255,255,255,0.03);
+      cursor: pointer;
+      text-align: center;
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+      font-size: 1.05rem;
+    }
+
+    .choice-card:hover { transform: translateY(-2px); }
+    .choice-card.correct { border-color: rgba(51,209,122,.8); box-shadow: 0 0 18px rgba(51,209,122,.3); }
+    .choice-card.wrong { border-color: rgba(255,93,108,.9); box-shadow: 0 0 18px rgba(255,93,108,.35); }
+
+    .flow-vertical {
+      width: min(700px, 100%);
+      margin: 10px auto;
+      display: grid;
+      gap: 8px;
+      justify-items: center;
+    }
+
+    .flow-step {
+      width: 100%;
+      text-align: center;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      background: rgba(255,255,255,0.03);
+      font-size: 1.12rem;
+      transition: box-shadow .3s ease, border-color .3s ease;
+    }
+
+    .flow-step.active { border-color: rgba(0,212,255,.7); box-shadow: 0 0 18px rgba(0,212,255,.3); }
+
+    .flow-arrow {
+      width: 5px;
+      height: 24px;
+      border-radius: 99px;
+      background: linear-gradient(180deg, var(--purple), var(--cyan));
+      position: relative;
+      overflow: hidden;
+    }
+
+    .flow-arrow::after {
+      content: "";
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      left: -2px;
+      top: -12px;
+      background: #d4f8ff;
+      box-shadow: 0 0 10px rgba(0,212,255,.9);
+      animation: particleDown 1.2s linear infinite;
+    }
+
+    .read-card { border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: rgba(255,255,255,0.03); }
+
+    .signature-card {
+      border-radius: 14px;
+      border: 1px solid rgba(255,210,74,.56);
+      padding: 14px;
+      background: rgba(255,210,74,.09);
+      box-shadow: 0 0 18px rgba(255,210,74,.22);
+    }
+
+    .package {
+      border: 1px dashed rgba(255,255,255,.35);
+      border-radius: 12px;
+      padding: 14px;
+      display: grid;
+      gap: 8px;
+      background: rgba(255,255,255,0.03);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .package.sealed::after {
+      content: "Sealed";
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      color: #0a0a0f;
+      font-weight: 800;
+      font-size: 0.8rem;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #ffd24a, #fff1b6);
+      transform: rotate(8deg);
+    }
+
+    .fly-right { animation: flyRight 1s ease forwards; }
+
+    .verify-layout {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 12px;
+    }
+
+    .hash-compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .char-compare {
+      margin-top: 8px;
+      display: grid;
+      grid-template-columns: repeat(64, minmax(8px, 1fr));
+      gap: 2px;
+    }
+
+    .char-compare span {
+      width: 100%;
+      aspect-ratio: 1/1;
+      border-radius: 3px;
+      background: rgba(255,255,255,.09);
+      opacity: 0;
+      transform: scale(.7);
+      animation: revealDot .2s ease forwards;
+    }
+
+    .char-compare span.good { background: rgba(51,209,122,.8); box-shadow: 0 0 8px rgba(51,209,122,.7); }
+    .char-compare span.bad { background: rgba(255,93,108,.8); box-shadow: 0 0 8px rgba(255,93,108,.6); }
+
+    .attack {
+      border: 1px solid rgba(255,93,108,.4);
+      background: rgba(255,93,108,.08);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 1.03rem;
+    }
+
+    .tampered-word { color: #ff8d96; font-weight: 700; text-decoration: underline; text-decoration-thickness: 2px; }
+
+    .drop-area {
+      border: 1px dashed rgba(255,255,255,.32);
+      border-radius: 12px;
+      min-height: 220px;
+      padding: 10px;
+      background: rgba(255,255,255,.03);
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .block {
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.24);
+      background: rgba(108,99,255,.2);
+      cursor: grab;
+      user-select: none;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .block:active { cursor: grabbing; }
+    .block.correct { background: rgba(51,209,122,.2); border-color: rgba(51,209,122,.7); box-shadow: 0 0 14px rgba(51,209,122,.3); }
+
+    .drop-slot {
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 10px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      padding: 4px;
+      font-size: 1rem;
+    }
+
+    .drop-slot.over { border-color: rgba(0,212,255,.75); background: rgba(0,212,255,.12); }
+
+    .quiz-q {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: rgba(255,255,255,.03);
+      display: grid;
+      gap: 9px;
+      font-size: 1.03rem;
+    }
+
+    .opt {
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 10px;
+      padding: 10px;
+      background: rgba(255,255,255,.02);
+      cursor: pointer;
+      transition: border-color .2s ease, transform .2s ease;
+      font-size: 1rem;
+    }
+
+    .opt:hover { transform: translateY(-1px); }
+    .opt.correct { border-color: rgba(51,209,122,.75); background: rgba(51,209,122,.12); }
+    .opt.wrong { border-color: rgba(255,93,108,.75); background: rgba(255,93,108,.12); }
+
+    .final-card {
+      border: 1px solid rgba(255,210,74,.45);
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(255,210,74,.12), rgba(108,99,255,.12));
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      font-size: 1.05rem;
+    }
+
+    .shine::before {
+      content: "";
+      position: absolute;
+      top: -120%;
+      left: -40%;
+      width: 34%;
+      height: 300%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+      transform: rotate(22deg);
+      animation: shine 3.2s ease-in-out infinite;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-weight: 800;
+      border: 1px solid rgba(255,210,74,.65);
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(255,210,74,.18);
+      box-shadow: 0 0 18px rgba(255,210,74,.25);
+    }
+
+    #toastWrap {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 100;
+      display: grid;
+      gap: 8px;
+    }
+
+    .toast {
+      min-width: 250px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.2);
+      background: rgba(18,18,26,.94);
+      box-shadow: 0 10px 22px rgba(0,0,0,.4);
+      transform: translateX(130%);
+      animation: slideToast .5s ease forwards;
+      font-size: 0.98rem;
+    }
+
+    .toast.success { border-color: rgba(51,209,122,.6); box-shadow: 0 0 18px rgba(51,209,122,.24); }
+    .toast.error { border-color: rgba(255,93,108,.6); box-shadow: 0 0 18px rgba(255,93,108,.24); }
+
+    .fade-in-up { animation: fadeInUp .5s ease forwards; }
+    .pulse-glow { animation: pulseGlow 2s infinite; }
+    .shake { animation: shake .4s ease; }
+    .success-burst { animation: successBurst .7s ease forwards; }
+    .step-fade { animation: fadeOnly .4s ease forwards; }
+
+    .confetti-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 140;
+    }
+
+    @media (max-width: 980px) {
+      .module-tabs { grid-template-columns: repeat(3, minmax(0,1fr)); }
+      .grid-3 { grid-template-columns: 1fr; }
+      .grid-2, .choice-grid, .verify-layout, .hash-compare { grid-template-columns: 1fr; }
+      .hash-machine { grid-template-columns: 1fr; }
+      .module-header { flex-direction: column; align-items: flex-start; }
+      .step-screen { min-height: 480px; }
+    }
+
+    @keyframes gradientFlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeOnly {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes pulseGlow {
+      0%,100% { box-shadow: 0 0 0 rgba(108,99,255,0); }
+      50% { box-shadow: 0 0 18px rgba(0,212,255,0.32), 0 0 28px rgba(108,99,255,0.24); }
+    }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      50% { transform: translateX(6px); }
+      75% { transform: translateX(-5px); }
+    }
+
+    @keyframes successBurst {
+      0% { transform: scale(.84); opacity: .6; filter: saturate(.8); }
+      60% { transform: scale(1.04); opacity: 1; filter: saturate(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @keyframes flow {
+      from { transform: translateX(-24px); }
+      to { transform: translateX(24px); }
+    }
+
+    @keyframes travelEnvelope {
+      0% { left: 4%; filter: hue-rotate(0deg) drop-shadow(0 0 8px rgba(108,99,255,.55)); }
+      40% { left: 44%; filter: hue-rotate(180deg) drop-shadow(0 0 9px rgba(255,93,108,.75)); }
+      60% { left: 52%; filter: hue-rotate(220deg) drop-shadow(0 0 10px rgba(255,93,108,.95)); }
+      100% { left: 89%; filter: hue-rotate(320deg) drop-shadow(0 0 8px rgba(0,212,255,.8)); }
+    }
+
+    @keyframes evilPulse {
+      0%,100% { opacity: .15; }
+      50% { opacity: .8; }
+    }
+
+    @keyframes particleDown {
+      from { top: -10px; opacity: .1; }
+      to { top: 26px; opacity: 1; }
+    }
+
+    @keyframes flyRight {
+      from { transform: translateX(0) scale(1); opacity: 1; }
+      to { transform: translateX(240px) scale(.94); opacity: 0; }
+    }
+
+    @keyframes revealDot { to { opacity: 1; transform: scale(1); } }
+
+    @keyframes slideToast {
+      from { transform: translateX(120%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes shine {
+      0% { left: -40%; }
+      60%,100% { left: 130%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-gradient"></div>
+  <div class="bg-grid"></div>
+
+  <canvas id="confetti" class="confetti-canvas" hidden></canvas>
+  <div id="toastWrap"></div>
+
+  <main class="container">
+    <section class="top glass">
+      <div class="progress-row">
+        <div>
+          <div class="progress-title">Digital Signature Learning Path</div>
+          <div class="progress-sub" id="progressText">Progress: 0 of 5 modules completed</div>
+        </div>
+        <div class="progress-sub" id="moduleLabel">Module 0</div>
+      </div>
+      <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+      <div id="moduleTabs" class="module-tabs"></div>
+    </section>
+
+    <section id="moduleRoot" class="glass module-card"></section>
+  </main>
+
+  <script>
+    const state = {
+      currentModule: 0,
+      unlockedModules: [0],
+      moduleSteps: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      userMessage: "",
+      messageHash: "",
+      messageHashBuffer: null,
+      keyPair: { publicKey: null, privateKey: null, publicKeyB64: "", privateKeyB64: "" },
+      signature: null,
+      signatureB64: "",
+      quizScore: 0,
+      verifyResult: null,
+      module5FlowDone: false
+    };
+
+    const moduleStepsTotal = { 0: 5, 1: 6, 2: 3, 3: 2, 4: 3, 5: 2 };
+
+    const modules = [
+      { id: 0, icon: "🎬", name: "Why Signatures?" },
+      { id: 1, icon: "#️⃣", name: "SHA-256" },
+      { id: 2, icon: "🔐", name: "RSA Keys" },
+      { id: 3, icon: "✍️", name: "Sign" },
+      { id: 4, icon: "✅", name: "Verify" },
+      { id: 5, icon: "🏁", name: "Final Quiz" }
+    ];
+
+    const textEncoder = new TextEncoder();
+
+    function escapeHtml(s) {
+      return (s || "").replace(/[&<>\"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+    }
+
+    function arrayBufferToHex(buffer) {
+      return [...new Uint8Array(buffer)].map((b) => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    function arrayBufferToBase64(buffer) {
+      const bytes = new Uint8Array(buffer);
+      let bin = "";
+      bytes.forEach((b) => bin += String.fromCharCode(b));
+      return btoa(bin);
+    }
+
+    function hexToArrayBuffer(hex) {
+      const arr = new Uint8Array(hex.length / 2);
+      for (let i = 0; i < arr.length; i += 1) arr[i] = parseInt(hex.substr(i * 2, 2), 16);
+      return arr.buffer;
+    }
+
+    async function sha256(text) {
+      const encoded = textEncoder.encode(text);
+      const digest = await crypto.subtle.digest("SHA-256", encoded);
+      return { hex: arrayBufferToHex(digest), buffer: digest };
+    }
+
+    async function exportKeyB64(key, type) {
+      const format = type === "public" ? "spki" : "pkcs8";
+      const ab = await crypto.subtle.exportKey(format, key);
+      return arrayBufferToBase64(ab);
+    }
+
+    function copyText(txt) {
+      navigator.clipboard.writeText(txt).then(() => showToast("Copied to clipboard", "success")).catch(() => showToast("Could not copy automatically", "error"));
+    }
+
+    function showToast(message, type = "success") {
+      const wrap = document.getElementById("toastWrap");
+      const el = document.createElement("div");
+      el.className = `toast ${type}`;
+      el.innerHTML = `<strong>${type === "success" ? "✓" : "⚠"}</strong> ${escapeHtml(message)}`;
+      wrap.appendChild(el);
+      setTimeout(() => {
+        el.style.transition = "opacity .35s ease, transform .35s ease";
+        el.style.opacity = "0";
+        el.style.transform = "translateX(120%)";
+      }, 2400);
+      setTimeout(() => el.remove(), 2900);
+    }
+
+    function unlockModule(moduleId) {
+      const next = moduleId + 1;
+      if (next <= 5 && !state.unlockedModules.includes(next)) state.unlockedModules.push(next);
+      if (next <= 5) {
+        state.currentModule = next;
+        state.moduleSteps[next] = state.moduleSteps[next] || 0;
+        showToast(`Module ${next} Unlocked!`, "success");
+      }
+      render();
+    }
+
+    function setError(el, msg, hintId) {
+      if (el) {
+        el.classList.remove("shake");
+        void el.offsetWidth;
+        el.classList.add("shake");
+      }
+      if (hintId) {
+        const hint = document.getElementById(hintId);
+        if (hint) hint.textContent = msg;
+      }
+      showToast(msg, "error");
+    }
+
+    function setSuccess(el, hintId, msg = "Great job!") {
+      if (el) {
+        el.classList.remove("success-burst");
+        void el.offsetWidth;
+        el.classList.add("success-burst");
+      }
+      if (hintId) {
+        const hint = document.getElementById(hintId);
+        if (hint) {
+          hint.textContent = msg;
+          hint.classList.add("success-note");
+        }
+      }
+    }
+
+    function nextStep(moduleId) {
+      state.moduleSteps[moduleId] = Math.min(state.moduleSteps[moduleId] + 1, moduleStepsTotal[moduleId] - 1);
+      render();
+    }
+
+    function stepHeader(moduleId, title, subtitle) {
+      const step = state.moduleSteps[moduleId] + 1;
+      const total = moduleStepsTotal[moduleId];
+      return `
+        <div class="module-header">
+          <div>
+            <h1 class="title">${title}</h1>
+            <p class="subtitle">${subtitle}</p>
+          </div>
+          <div class="inside-step">Step ${step} of ${total}</div>
+        </div>
+      `;
+    }
+
+    function renderTabs() {
+      const tabs = document.getElementById("moduleTabs");
+      tabs.innerHTML = modules.map((m) => {
+        const unlocked = state.unlockedModules.includes(m.id);
+        const active = state.currentModule === m.id;
+        return `
+          <button class="module-tab ${active ? "active" : ""}" data-go="${m.id}" ${unlocked ? "" : "disabled"}>
+            <div>${m.icon} ${unlocked ? "" : "🔒"}</div>
+            <div style="margin-top:4px; font-weight:600;">${m.id}. ${m.name}</div>
+          </button>
+        `;
+      }).join("");
+
+      tabs.querySelectorAll("[data-go]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          state.currentModule = Number(btn.dataset.go);
+          render();
+        });
+      });
+    }
+
+    function renderTopBar() {
+      const highestUnlocked = Math.max(...state.unlockedModules);
+      const completed = Math.max(0, Math.min(5, highestUnlocked));
+      const percent = (completed / 5) * 100;
+      document.getElementById("progressBar").style.width = `${percent}%`;
+      document.getElementById("progressText").textContent = `Progress: ${completed} of 5 modules completed`;
+      document.getElementById("moduleLabel").textContent = `Module ${state.currentModule}`;
+      renderTabs();
+    }
+
+    function hashDiffHTML(hashA, hashB) {
+      const len = Math.max(hashA.length, hashB.length);
+      let diff = 0;
+      let htmlA = "";
+      let htmlB = "";
+      for (let i = 0; i < len; i += 1) {
+        const a = hashA[i] || "";
+        const b = hashB[i] || "";
+        if (a === b) {
+          htmlA += `<span class="same">${a}</span>`;
+          htmlB += `<span class="same">${b}</span>`;
+        } else {
+          diff += 1;
+          htmlA += `<span class="diffA">${a}</span>`;
+          htmlB += `<span class="diffB">${b}</span>`;
+        }
+      }
+      return { diff, htmlA, htmlB };
+    }
+
+    function detailsBlock(label, value) {
+      return `
+        <details class="reveal">
+          <summary>${label} ▾</summary>
+          <code class="hash">${escapeHtml(value)}</code>
+        </details>
+      `;
+    }
+
+    function renderModule0(step) {
+      const header = stepHeader(0, "Module 0: Why Digital Signatures?", "One idea per step. Move through the core problems first, then solve the checkpoint.");
+      if (step === 0) {
+        return `${header}
+          <div class="step-screen step-fade">
+            <div class="grid-3">
+              <div class="mini-card char-card alice"><div class="char-name">👩 Alice</div><div class="char-line concept-text">I want to send a message.</div></div>
+              <div class="mini-card char-card eve"><div class="char-name">🕵️ Eve</div><div class="char-line concept-text">I can intercept and change it.</div></div>
+              <div class="mini-card char-card bob"><div class="char-name">👨 Bob</div><div class="char-line concept-text">How do I know it is really from Alice?</div></div>
+            </div>
+            <div class="envelope-track"><div class="evil-flash"></div><div class="envelope">✉️</div></div>
+            <div><button class="btn" id="nextM0">Got it →</button></div>
+          </div>`;
+      }
+      if (step === 1 || step === 2 || step === 3) {
+        const cards = [
+          { icon: "🔐", title: "Authentication", text: "Is this really from Alice?" },
+          { icon: "🛡️", title: "Integrity", text: "Was the message changed?" },
+          { icon: "✍️", title: "Non-repudiation", text: "Alice cannot deny she sent it." }
+        ];
+        const c = cards[step - 1];
+        return `${header}
+          <div class="step-screen step-fade centered-focus">
+            <div class="mini-card" style="max-width:760px; margin:0 auto;">
+              <div class="concept-text"><strong>${c.icon} ${c.title}</strong></div>
+              <div class="concept-text" style="margin-top:10px; color:#d9defd;">${c.text}</div>
+            </div>
+            <div><button class="btn" id="nextM0">Got it →</button></div>
+          </div>`;
+      }
+
+      return `${header}
+        <div class="step-screen step-fade">
+          <div class="mini-card pulse-glow" id="m0Task">
+            <h3 class="concept-text">Checkpoint</h3>
+            <p class="subtitle" style="margin-top:6px;">Which of these does a digital signature solve?</p>
+            <div class="quiz-options">
+              <label class="quiz-row"><input type="checkbox" data-opt="auth" /> Proves who sent the message</label>
+              <label class="quiz-row"><input type="checkbox" data-opt="integrity" /> Detects if message was changed</label>
+              <label class="quiz-row"><input type="checkbox" data-opt="speed" /> Makes the message faster to send</label>
+              <label class="quiz-row"><input type="checkbox" data-opt="nonrep" /> Prevents sender from denying they sent it</label>
+            </div>
+            <div class="hint" id="m0Hint"></div>
+            <button class="btn" id="m0Check">Check Answer</button>
+          </div>
+        </div>`;
+    }
+
+    function bindModule0(step) {
+      if (step <= 3) {
+        document.getElementById("nextM0").addEventListener("click", () => nextStep(0));
+        return;
+      }
+      const task = document.getElementById("m0Task");
+      document.getElementById("m0Check").addEventListener("click", () => {
+        const checked = [...task.querySelectorAll("input[type='checkbox']")].filter((c) => c.checked).map((c) => c.dataset.opt);
+        const ok = checked.length === 3 && ["auth","integrity","nonrep"].every((v) => checked.includes(v));
+        if (!ok) return setError(task, "Hint: pick exactly the three security properties.", "m0Hint");
+        setSuccess(task, "m0Hint", "Excellent.");
+        setTimeout(() => unlockModule(0), 700);
+      });
+    }
+
+    function renderModule1(step) {
+      const header = stepHeader(1, "Module 1: Hashing with SHA-256", "Understand each property first. The tasks appear after the theory steps.");
+      if (step === 0) {
+        return `${header}
+          <div class="step-screen step-fade centered-focus">
+            <div class="hash-machine" style="width:min(920px,100%);">
+              <div class="machine-box concept-text">Any text, any length</div>
+              <div style="display:grid; justify-items:center; gap:8px;"><div class="gear"></div><div class="mini-card">SHA-256</div></div>
+              <div class="machine-box concept-text">64-char hex string</div>
+            </div>
+            <button class="btn" id="nextM1">Got it →</button>
+          </div>`;
+      }
+
+      const prop = [
+        { t: "⚡ Deterministic", d: "Same input ALWAYS gives the same hash." },
+        { t: "🌊 Avalanche Effect", d: "Change one character and the output changes dramatically." },
+        { t: "🚫 One-way", d: "You cannot reverse the hash to recover the original text." }
+      ];
+      if (step >= 1 && step <= 3) {
+        const p = prop[step - 1];
+        return `${header}
+          <div class="step-screen step-fade centered-focus">
+            <div class="mini-card" style="max-width:760px;">
+              <div class="concept-text"><strong>${p.t}</strong></div>
+              <div class="concept-text" style="margin-top:10px; color:#d9defd;">${p.d}</div>
+            </div>
+            <button class="btn" id="nextM1">Got it →</button>
+          </div>`;
+      }
+
+      if (step === 4) {
+        return `${header}
+          <div class="step-screen step-fade">
+            <div class="mini-card">
+              <h3 class="concept-text">Avalanche Effect Demo</h3>
+              <div class="grid-2" style="margin-top:8px;">
+                <div>
+                  <label>Input A</label>
+                  <input id="avA" type="text" value="Hello World" />
+                  <div class="hash-box">
+                    <details class="reveal">
+                      <summary>Show hash A ▾</summary>
+                      <code id="avHashA" class="hash hash-diff"></code>
+                    </details>
+                  </div>
+                </div>
+                <div>
+                  <label>Input B</label>
+                  <input id="avB" type="text" value="Hello World!" />
+                  <div class="hash-box">
+                    <details class="reveal">
+                      <summary>Show hash B ▾</summary>
+                      <code id="avHashB" class="hash hash-diff"></code>
+                    </details>
+                  </div>
+                </div>
+              </div>
+              <div id="avCount" class="subtitle" style="margin-top:8px;"></div>
+            </div>
+            <div><button class="btn" id="nextM1">Got it →</button></div>
+          </div>`;
+      }
+
+      return `${header}
+        <div class="step-screen step-fade">
+          <div class="mini-card pulse-glow" id="hashTask">
+            <h3 class="concept-text">Hash Your Message</h3>
+            <p class="subtitle" style="margin-top:6px;">Enter the message you want to sign.</p>
+            <textarea id="mainMessage" placeholder="Enter the message you want to sign..."></textarea>
+            <div style="display:flex; gap:10px; align-items:center; margin-top:10px;">
+              <button class="btn" id="hashBtn">🔨 Hash It</button>
+              <div id="hashLoad"></div>
+            </div>
+            <div id="hashResult" style="margin-top:12px;"></div>
+            <div id="m1Hint" class="hint"></div>
+          </div>
+        </div>`;
+    }
+
+    function bindModule1(step) {
+      if (step <= 3) {
+        document.getElementById("nextM1").addEventListener("click", () => nextStep(1));
+        return;
+      }
+      if (step === 4) {
+        const avA = document.getElementById("avA");
+        const avB = document.getElementById("avB");
+        const outA = document.getElementById("avHashA");
+        const outB = document.getElementById("avHashB");
+        const countEl = document.getElementById("avCount");
+        async function updateAvalanche() {
+          const [ha, hb] = await Promise.all([sha256(avA.value), sha256(avB.value)]);
+          const diff = hashDiffHTML(ha.hex, hb.hex);
+          outA.innerHTML = diff.htmlA;
+          outB.innerHTML = diff.htmlB;
+          countEl.textContent = `${diff.diff} out of 64 characters are different`;
+        }
+        avA.addEventListener("input", updateAvalanche);
+        avB.addEventListener("input", updateAvalanche);
+        updateAvalanche();
+        document.getElementById("nextM1").addEventListener("click", () => nextStep(1));
+        return;
+      }
+
+      const hashBtn = document.getElementById("hashBtn");
+      const msgEl = document.getElementById("mainMessage");
+      const resultEl = document.getElementById("hashResult");
+      const loadEl = document.getElementById("hashLoad");
+      const task = document.getElementById("hashTask");
+
+      hashBtn.addEventListener("click", async () => {
+        const message = msgEl.value.trim();
+        if (!message) return setError(task, "Enter a message first.", "m1Hint");
+        hashBtn.disabled = true;
+        loadEl.innerHTML = `<span class="load"><span class="spinner"></span> Computing SHA-256...</span>`;
+        resultEl.innerHTML = "";
+        document.getElementById("m1Hint").textContent = "";
+        try {
+          await new Promise((r) => setTimeout(r, 800));
+          const h = await sha256(message);
+          state.userMessage = message;
+          state.messageHash = h.hex;
+          state.messageHashBuffer = h.buffer;
+          resultEl.innerHTML = `
+            <div class="hash-box success-burst">
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                <strong>SHA-256 Fingerprint</strong>
+                <button id="copyHash" class="btn btn-secondary">Copy</button>
+              </div>
+              ${detailsBlock("Show details", h.hex)}
+              <p class="subtitle" style="margin-top:10px;">Remember this hash. It is your message fingerprint.</p>
+            </div>`;
+          document.getElementById("copyHash").addEventListener("click", () => copyText(h.hex));
+          setSuccess(task, "m1Hint", "Hash complete. Module 2 unlocked.");
+          setTimeout(() => unlockModule(1), 700);
+        } catch {
+          setError(task, "Could not hash your message.", "m1Hint");
+        } finally {
+          hashBtn.disabled = false;
+          loadEl.innerHTML = "";
+        }
+      });
+    }
+
+    function renderModule2(step) {
+      const header = stepHeader(2, "Module 2: RSA Key Pair Generation", "Three focused steps: analogy, rules, then generate your keys.");
+
+      if (step === 0) {
+        return `${header}
+          <div class="step-screen step-fade centered-focus">
+            <div class="grid-2" style="width:min(980px,100%); gap:22px;">
+              <div class="mini-card">
+                <div class="big-symbol">🔓</div>
+                <div class="concept-text" style="margin-top:12px;"><strong>Public Key</strong></div>
+                <div class="concept-text" style="color:#b8f3ff;">Give to everyone</div>
+              </div>
+              <div class="mini-card">
+                <div class="big-symbol" style="filter:drop-shadow(0 0 24px rgba(108,99,255,.6));">🔑</div>
+                <div class="concept-text" style="margin-top:12px;"><strong>Private Key</strong></div>
+                <div class="concept-text" style="color:#d8ccff;">Keep secret</div>
+              </div>
+            </div>
+            <button class="btn" id="nextM2">I understand →</button>
+          </div>`;
+      }
+
+      if (step === 1) {
+        return `${header}
+          <div class="step-screen step-fade centered-focus">
+            <div class="grid-2" style="width:min(980px,100%); gap:18px;">
+              <div class="rule-card">➡️ Public key encrypts → only private key decrypts
+                <div class="subtitle" style="margin-top:10px; font-size:1rem;">Example: Bob shares public key, only Bob can open with private key.</div>
+              </div>
+              <div class="rule-card">🖊️ Private key signs → public key verifies
+                <div class="subtitle" style="margin-top:10px; font-size:1rem;">Example: Alice signs, Bob verifies with Alice's public key.</div>
+              </div>
+            </div>
+            <button class="btn" id="nextM2">Makes sense →</button>
+          </div>`;
+      }
+
+      return `${header}
+        <div class="step-screen step-fade">
+          <div class="mini-card pulse-glow" id="m2Task">
+            <h3 class="concept-text">Now generate YOUR keys</h3>
+            <div class="stack" style="margin-top:10px;">
+              <div>
+                <strong>Choose key size</strong>
+                <div style="display:flex; gap:16px; margin-top:10px; flex-wrap:wrap; font-size:1.06rem;">
+                  <label><input type="radio" name="keysize" value="1024" checked /> 1024-bit (fast, educational)</label>
+                  <label><input type="radio" name="keysize" value="2048" /> 2048-bit (standard)</label>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <button class="btn" id="genBtn">⚡ Generate Key Pair</button>
+                <div id="genLoad"></div>
+              </div>
+              <div id="keyOutput"></div>
+              <div id="keyQuiz"></div>
+              <div id="m2Hint" class="hint"></div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function bindModule2(step) {
+      if (step <= 1) {
+        document.getElementById("nextM2").addEventListener("click", () => nextStep(2));
+        return;
+      }
+
+      const btn = document.getElementById("genBtn");
+      const load = document.getElementById("genLoad");
+      const out = document.getElementById("keyOutput");
+      const quiz = document.getElementById("keyQuiz");
+      const panel = document.getElementById("m2Task");
+
+      btn.addEventListener("click", async () => {
+        btn.disabled = true;
+        out.innerHTML = "";
+        quiz.innerHTML = "";
+        load.innerHTML = `<span class="load"><span class="spinner"></span> Generating prime numbers...</span>`;
+        document.getElementById("m2Hint").textContent = "";
+        try {
+          const bits = Number(document.querySelector("input[name='keysize']:checked").value);
+          await new Promise((r) => setTimeout(r, 1500));
+          const kp = await crypto.subtle.generateKey({
+            name: "RSA-PSS",
+            modulusLength: bits,
+            publicExponent: new Uint8Array([1, 0, 1]),
+            hash: "SHA-256"
+          }, true, ["sign", "verify"]);
+
+          const [pubB64, privB64] = await Promise.all([exportKeyB64(kp.publicKey, "public"), exportKeyB64(kp.privateKey, "private")]);
+          state.keyPair.publicKey = kp.publicKey;
+          state.keyPair.privateKey = kp.privateKey;
+          state.keyPair.publicKeyB64 = pubB64;
+          state.keyPair.privateKeyB64 = privB64;
+
+          out.innerHTML = `
+            <div class="grid-2 fade-in-up">
+              <div class="key-card public">
+                <h4>🔓 PUBLIC KEY</h4>
+                <div class="subtitle">Share this with anyone who verifies your signatures.</div>
+                ${detailsBlock("Show details", pubB64)}
+                <button id="copyPub" class="btn btn-secondary">Copy Public Key</button>
+              </div>
+              <div class="key-card private">
+                <h4>🔑 PRIVATE KEY</h4>
+                <div class="warning">⚠️ NEVER share this key with anyone.</div>
+                ${detailsBlock("Show details", privB64)}
+                <button id="copyPriv" class="btn">Copy Private Key</button>
+              </div>
+            </div>`;
+
+          document.getElementById("copyPub").addEventListener("click", () => copyText(pubB64));
+          document.getElementById("copyPriv").addEventListener("click", () => copyText(privB64));
+
+          quiz.innerHTML = `
+            <div class="mini-card" style="margin-top:10px;">
+              <h4 class="concept-text">Mini Quiz</h4>
+              <p class="subtitle" style="margin-top:6px;">You want to SIGN a document. Which key do you use?</p>
+              <div class="choice-grid">
+                <button class="choice-card" data-k="public">🔓 Public Key</button>
+                <button class="choice-card" data-k="private">🔑 Private Key</button>
+              </div>
+              <div id="kqHint" class="hint"></div>
+            </div>`;
+
+          quiz.querySelectorAll("[data-k]").forEach((c) => {
+            c.addEventListener("click", () => {
+              if (c.dataset.k === "private") {
+                c.classList.add("correct");
+                const hint = document.getElementById("kqHint");
+                hint.textContent = "Correct! Private key creates the signature.";
+                hint.classList.add("success-note");
+                setSuccess(panel, "m2Hint", "Key pair generated and verified.");
+                setTimeout(() => unlockModule(2), 700);
+              } else {
+                c.classList.add("wrong");
+                setError(panel, "No. You sign with your PRIVATE key.", "kqHint");
+              }
+            });
+          });
+
+        } catch {
+          setError(panel, "Key generation failed.", "m2Hint");
+        } finally {
+          btn.disabled = false;
+          load.innerHTML = "";
+        }
+      });
+    }
+
+    function renderModule3(step) {
+      const header = stepHeader(3, "Module 3: Creating the Digital Signature", "See the flow, then produce a real signature using your own keys.");
+      if (step === 0) {
+        return `${header}
+          <div class="step-screen step-fade centered-focus">
+            <div class="flow-vertical" id="m3Flow">
+              <div class="flow-step" data-step="0">📄 Message</div><div class="flow-arrow"></div>
+              <div class="flow-step" data-step="1">[SHA-256 Hash Function]</div><div class="flow-arrow"></div>
+              <div class="flow-step" data-step="2">🔢 Hash</div><div class="flow-arrow"></div>
+              <div class="flow-step" data-step="3">[Encrypt with PRIVATE KEY]</div><div class="flow-arrow"></div>
+              <div class="flow-step" data-step="4">✍️ Digital Signature</div>
+            </div>
+            <button class="btn" id="nextM3">Got it →</button>
+          </div>`;
+      }
+
+      const hasData = state.userMessage && state.messageHash && state.keyPair.privateKey;
+      return `${header}
+        <div class="step-screen step-fade">
+          <div class="mini-card pulse-glow" id="m3Task">
+            ${hasData ? `
+              <div class="read-card"><strong>Message from Module 1</strong><div style="margin-top:6px; font-size:1.06rem;">${escapeHtml(state.userMessage)}</div></div>
+              <div class="read-card"><strong>Hash from Module 1</strong>${detailsBlock("Show details", state.messageHash)}</div>
+              <h4 class="concept-text">Which key should we use to sign?</h4>
+              <div style="display:flex; gap:10px; margin:8px 0 10px; flex-wrap:wrap;">
+                <button class="btn btn-danger" id="usePublic">🔓 Use Public Key</button>
+                <button class="btn" id="usePrivate">🔑 Use Private Key</button>
+              </div>
+              <div id="signArea"></div>
+              <div id="m3Hint" class="hint"></div>
+            ` : `<div class="warning">Missing prerequisites. Complete Module 1 and Module 2.</div>`}
+          </div>
+        </div>`;
+    }
+
+    function bindModule3(step) {
+      if (step === 0) {
+        document.querySelectorAll("#m3Flow .flow-step").forEach((s, i) => setTimeout(() => s.classList.add("active"), i * 300));
+        document.getElementById("nextM3").addEventListener("click", () => nextStep(3));
+        return;
+      }
+      if (!(state.userMessage && state.messageHash && state.keyPair.privateKey)) return;
+
+      const signArea = document.getElementById("signArea");
+      const task = document.getElementById("m3Task");
+
+      document.getElementById("usePublic").addEventListener("click", () => setError(task, "Wrong. Signing uses PRIVATE key.", "m3Hint"));
+      document.getElementById("usePrivate").addEventListener("click", () => {
+        document.getElementById("m3Hint").textContent = "Correct. Now run signing.";
+        document.getElementById("m3Hint").classList.add("success-note");
+        signArea.innerHTML = `
+          <div class="mini-card">
+            <h4>Apply private key to hash</h4>
+            <div style="display:flex; align-items:center; gap:10px; margin-top:8px;"><button class="btn" id="runSign">Run Signing</button><div id="signLoad"></div></div>
+            <div id="signOut" style="margin-top:10px;"></div>
+          </div>`;
+
+        document.getElementById("runSign").addEventListener("click", async () => {
+          const runBtn = document.getElementById("runSign");
+          const load = document.getElementById("signLoad");
+          const out = document.getElementById("signOut");
+          runBtn.disabled = true;
+          load.innerHTML = `<span class="load"><span class="spinner"></span> Applying private key to hash...</span>`;
+          out.innerHTML = "";
+          try {
+            await new Promise((r) => setTimeout(r, 900));
+            const hashBuffer = state.messageHashBuffer || hexToArrayBuffer(state.messageHash);
+            const signature = await crypto.subtle.sign({ name: "RSA-PSS", saltLength: 32 }, state.keyPair.privateKey, hashBuffer);
+            state.signature = signature;
+            state.signatureB64 = arrayBufferToBase64(signature);
+
+            out.innerHTML = `
+              <div class="signature-card success-burst">
+                <h4>✍️ Your Digital Signature</h4>
+                ${detailsBlock("Show details", state.signatureB64)}
+                <p class="subtitle" style="margin-top:10px;">Unique to this message signed with your private key.</p>
+              </div>
+              <div class="package sealed" id="signedPkg" style="margin-top:10px;">
+                <div>📄 Original Message: <em>${escapeHtml(state.userMessage)}</em></div>
+                <div>✍️ Signature attached</div>
+                <div>🔓 Public key attached for verification</div>
+              </div>
+              <button class="btn btn-secondary" id="sendBob" style="margin-top:10px;">Seal & Send to Bob</button>
+              <div id="sendMsg" class="subtitle" style="margin-top:8px;"></div>`;
+
+            document.getElementById("sendBob").addEventListener("click", () => {
+              const pkg = document.getElementById("signedPkg");
+              pkg.classList.add("fly-right");
+              document.getElementById("sendMsg").textContent = "This package is ready to send to Bob.";
+              setTimeout(() => unlockModule(3), 900);
+            });
+
+          } catch {
+            setError(task, "Signing failed.", "m3Hint");
+          } finally {
+            runBtn.disabled = false;
+            load.innerHTML = "";
+          }
+        });
+      });
+    }
+
+    function tamperMessage(msg) {
+      const words = msg.split(/\s+/).filter(Boolean);
+      if (!words.length) return "[tampered empty message]";
+      const idx = Math.min(1, words.length - 1);
+      words[idx] = words[idx] + "_HACKED";
+      return words.join(" ");
+    }
+
+    function highlightTampered(original, tampered) {
+      const o = original.split(" ");
+      const t = tampered.split(" ");
+      return t.map((w, i) => w !== o[i] ? `<span class="tampered-word">${escapeHtml(w)}</span>` : escapeHtml(w)).join(" ");
+    }
+
+    function renderModule4(step) {
+      const header = stepHeader(4, "Module 4: Verifying the Signature", "Verify normal traffic first, then test the tampering attack.");
+      if (step === 0) {
+        return `${header}
+          <div class="step-screen step-fade centered-focus">
+            <div class="verify-layout" style="width:min(980px,100%);">
+              <div class="mini-card concept-text">✍️ Signature → [Public key verify] → Hash A</div>
+              <div class="mini-card concept-text">📄 Message → [SHA-256] → Hash B</div>
+            </div>
+            <div class="concept-text">If Hash A equals Hash B, signature is valid.</div>
+            <button class="btn" id="nextM4">Got it →</button>
+          </div>`;
+      }
+
+      if (!(state.userMessage && state.signature && state.keyPair.publicKey)) {
+        return `${header}<div class="step-screen step-fade"><div class="warning">Missing prerequisites. Complete Module 3 first.</div></div>`;
+      }
+
+      if (step === 1) {
+        return `${header}
+          <div class="step-screen step-fade">
+            <div class="mini-card pulse-glow" id="m4Task1">
+              <h3 class="concept-text">Part 1: Verify Signature (Bob)</h3>
+              <div class="package sealed" style="margin:8px 0 10px;">
+                <div>📄 Message received: ${escapeHtml(state.userMessage)}</div>
+                <div>✍️ Signature attached</div>
+                <div>🔓 Alice's public key attached</div>
+              </div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+                <button class="btn" id="vStep1">Step 1: Verify signature with public key</button>
+                <button class="btn" id="vStep2" disabled>Step 2: Hash received message</button>
+                <button class="btn" id="vStep3" disabled>Step 3: Compare hashes</button>
+              </div>
+              <div id="verifyArea" class="stack"></div>
+              <div id="m4Hint1" class="hint"></div>
+              <button class="btn btn-secondary" id="nextM4" style="display:none; margin-top:8px;">Continue →</button>
+            </div>
+          </div>`;
+      }
+
+      const tampered = tamperMessage(state.userMessage);
+      return `${header}
+        <div class="step-screen step-fade">
+          <div class="mini-card pulse-glow" id="m4Task2">
+            <h3 class="concept-text">Part 2: Attack Simulation</h3>
+            <div class="attack">
+              <div><strong>Scenario:</strong> Eve changed one word.</div>
+              <div style="margin-top:8px;">Tampered message: ${highlightTampered(state.userMessage, tampered)}</div>
+              <div class="subtitle" style="margin-top:8px;">The signature is unchanged. Will verification fail?</div>
+            </div>
+            <button class="btn btn-danger" id="verifyTampered" style="margin-top:10px;">🔍 Verify tampered message</button>
+            <div id="attackOut" style="margin-top:10px;"></div>
+            <div id="m4Hint2" class="hint"></div>
+          </div>
+        </div>`;
+    }
+
+    function bindModule4(step) {
+      if (step === 0) {
+        document.getElementById("nextM4").addEventListener("click", () => nextStep(4));
+        return;
+      }
+      if (!(state.userMessage && state.signature && state.keyPair.publicKey)) return;
+
+      if (step === 1) {
+        const verifyArea = document.getElementById("verifyArea");
+        const task = document.getElementById("m4Task1");
+        let step1Done = false;
+        let step2Done = false;
+        let hashA = "";
+        let hashB = "";
+
+        document.getElementById("vStep1").addEventListener("click", async () => {
+          const btn = document.getElementById("vStep1");
+          btn.disabled = true;
+          verifyArea.innerHTML = `<div class="load"><span class="spinner"></span> Verifying signature with Alice's public key...</div>`;
+          try {
+            const messageHashBuffer = state.messageHashBuffer || hexToArrayBuffer(state.messageHash);
+            const ok = await crypto.subtle.verify({ name: "RSA-PSS", saltLength: 32 }, state.keyPair.publicKey, state.signature, messageHashBuffer);
+            state.verifyResult = ok;
+            hashA = state.messageHash;
+            verifyArea.innerHTML = `<div class="mini-card success-burst"><strong>Hash A from signature path</strong>${detailsBlock("Show details", hashA)}</div>`;
+            step1Done = true;
+            document.getElementById("vStep2").disabled = false;
+          } catch {
+            btn.disabled = false;
+            setError(task, "Verification step 1 failed.", "m4Hint1");
+          }
+        });
+
+        document.getElementById("vStep2").addEventListener("click", async () => {
+          const btn = document.getElementById("vStep2");
+          btn.disabled = true;
+          verifyArea.insertAdjacentHTML("beforeend", `<div class="load" id="v2Load"><span class="spinner"></span> Hashing received message...</div>`);
+          try {
+            const h = await sha256(state.userMessage);
+            hashB = h.hex;
+            const ld = document.getElementById("v2Load");
+            if (ld) ld.remove();
+            verifyArea.insertAdjacentHTML("beforeend", `<div class="mini-card success-burst"><strong>Hash B from message path</strong>${detailsBlock("Show details", hashB)}</div>`);
+            step2Done = true;
+            document.getElementById("vStep3").disabled = false;
+          } catch {
+            setError(task, "Could not hash message.", "m4Hint1");
+          }
+        });
+
+        document.getElementById("vStep3").addEventListener("click", () => {
+          if (!(step1Done && step2Done)) return;
+          const cmp = hashDiffHTML(hashA, hashB);
+          const allGood = cmp.diff === 0 && state.verifyResult;
+          const dots = [];
+          for (let i = 0; i < 64; i += 1) {
+            const good = hashA[i] === hashB[i];
+            dots.push(`<span class="${good ? "good" : "bad"}" style="animation-delay:${i * 0.014}s"></span>`);
+          }
+          verifyArea.insertAdjacentHTML("beforeend", `
+            <div class="mini-card ${allGood ? "success-burst" : "shake"}">
+              <div class="hash-compare">
+                <div><strong>Hash A</strong><details class="reveal"><summary>Show details ▾</summary><code class="hash hash-diff">${cmp.htmlA}</code></details></div>
+                <div><strong>Hash B</strong><details class="reveal"><summary>Show details ▾</summary><code class="hash hash-diff">${cmp.htmlB}</code></details></div>
+              </div>
+              <div class="char-compare">${dots.join("")}</div>
+              <div style="margin-top:8px; font-weight:800; color:${allGood ? "#33d17a" : "#ff5d6c"};">${allGood ? "✅ SIGNATURE VALID — Message is authentic!" : "❌ SIGNATURE INVALID"}</div>
+            </div>`);
+          document.getElementById("nextM4").style.display = "inline-flex";
+        });
+
+        document.getElementById("nextM4").addEventListener("click", () => nextStep(4));
+        return;
+      }
+
+      const task2 = document.getElementById("m4Task2");
+      const tampered = tamperMessage(state.userMessage);
+      document.getElementById("verifyTampered").addEventListener("click", async () => {
+        const out = document.getElementById("attackOut");
+        out.innerHTML = `<div class="load"><span class="spinner"></span> Verifying tampered message...</div>`;
+        try {
+          const tamperedHash = await sha256(tampered);
+          const ok = await crypto.subtle.verify({ name: "RSA-PSS", saltLength: 32 }, state.keyPair.publicKey, state.signature, tamperedHash.buffer);
+          const cmp = hashDiffHTML(state.messageHash, tamperedHash.hex);
+          const invalid = !ok;
+          out.innerHTML = `
+            <div class="mini-card ${invalid ? "shake" : ""}" style="border-color:${invalid ? "rgba(255,93,108,.6)" : "rgba(51,209,122,.6)"};">
+              <div class="hash-compare"><div><strong>Original Hash</strong><details class="reveal"><summary>Show details ▾</summary><code class="hash hash-diff">${cmp.htmlA}</code></details></div><div><strong>Tampered Hash</strong><details class="reveal"><summary>Show details ▾</summary><code class="hash hash-diff">${cmp.htmlB}</code></details></div></div>
+              <div style="margin-top:8px; font-weight:800; color:${invalid ? "#ff5d6c" : "#33d17a"};">${invalid ? "❌ SIGNATURE INVALID — Eve's tampering was detected!" : "✅ Signature still valid"}</div>
+            </div>
+            <div class="final-card" style="margin-top:10px;">Any message change invalidates the signature, which is why signatures guarantee integrity.</div>`;
+          if (invalid) {
+            setSuccess(task2, "m4Hint2", "Tampering detected. Module 5 unlocked.");
+            setTimeout(() => unlockModule(4), 1000);
+          }
+        } catch {
+          setError(task2, "Attack simulation failed.", "m4Hint2");
+        }
+      });
+    }
+
+    function renderModule5(step) {
+      const header = stepHeader(5, "Module 5: Final Quiz & Summary", "Assemble the protocol, answer scenario questions, and finish the course.");
+      if (step === 0) {
+        return `${header}
+          <div class="step-screen step-fade">
+            <div class="mini-card pulse-glow" id="m5Flow">
+              <h3 class="concept-text">Part 1: Drag & Drop — Build the Flow</h3>
+              <div class="grid-3" style="grid-template-columns: 1fr 1fr 1fr; margin-top:10px;">
+                <div>
+                  <h4>Blocks</h4>
+                  <div id="bank" class="drop-area" style="min-height:260px;">
+                    <div class="block" draggable="true" data-id="sign1">Hash the message</div>
+                    <div class="block" draggable="true" data-id="sign2">Sign hash with private key</div>
+                    <div class="block" draggable="true" data-id="sign0">Write the message</div>
+                    <div class="block" draggable="true" data-id="ver2">Compare hashes</div>
+                    <div class="block" draggable="true" data-id="ver0">Decrypt signature</div>
+                    <div class="block" draggable="true" data-id="ver1">Hash the message</div>
+                  </div>
+                </div>
+                <div>
+                  <h4>SIGNING (Sender)</h4>
+                  <div class="drop-area" id="signZone"><div class="drop-slot" data-zone="sign" data-pos="0">Step 1</div><div class="drop-slot" data-zone="sign" data-pos="1">Step 2</div><div class="drop-slot" data-zone="sign" data-pos="2">Step 3</div></div>
+                </div>
+                <div>
+                  <h4>VERIFYING (Receiver)</h4>
+                  <div class="drop-area" id="verZone"><div class="drop-slot" data-zone="ver" data-pos="0">Step 1</div><div class="drop-slot" data-zone="ver" data-pos="1">Step 2</div><div class="drop-slot" data-zone="ver" data-pos="2">Step 3</div></div>
+                </div>
+              </div>
+              <div id="flowHint" class="hint"></div>
+              <button class="btn" id="checkFlow">Check Flow</button>
+            </div>
+          </div>`;
+      }
+
+      return `${header}
+        <div class="step-screen step-fade">
+          <div class="mini-card" id="m5Quiz">
+            <h3 class="concept-text">Part 2: Scenario Quiz</h3>
+            <div class="stack" style="margin-top:8px;">
+              <div class="quiz-q" data-q="q1" data-answer="private">
+                <strong>Q1: Alice wants to sign a contract. She should use her ___</strong>
+                <div class="opt" data-v="public">Public Key</div><div class="opt" data-v="private">Private Key</div><div class="opt" data-v="bobpub">Bob's Public Key</div>
+                <div class="hint" id="q1Hint"></div>
+              </div>
+              <div class="quiz-q" data-q="q2" data-answer="alicepub">
+                <strong>Q2: Bob verifies a signed message using ___</strong>
+                <div class="opt" data-v="bobpriv">His own private key</div><div class="opt" data-v="alicepriv">Alice's private key</div><div class="opt" data-v="alicepub">Alice's public key</div>
+                <div class="hint" id="q2Hint"></div>
+              </div>
+              <div class="quiz-q" data-q="q3" data-answer="tampered">
+                <strong>Q3: Hash mismatch means ___</strong>
+                <div class="opt" data-v="authentic">The message is authentic</div><div class="opt" data-v="tampered">The message was tampered with</div><div class="opt" data-v="wrongkey">The key is wrong</div>
+                <div class="hint" id="q3Hint"></div>
+              </div>
+            </div>
+            <div id="quizHint" class="hint"></div>
+          </div>
+          <div id="summaryArea"></div>
+        </div>`;
+    }
+
+    function bindModule5(step) {
+      if (step === 0) {
+        bindDragFlow();
+        return;
+      }
+      bindScenarioQuiz();
+    }
+
+    function bindDragFlow() {
+      const blocks = document.querySelectorAll(".block");
+      const slots = document.querySelectorAll(".drop-slot");
+      let dragged = null;
+
+      blocks.forEach((b) => {
+        b.addEventListener("dragstart", () => { dragged = b; setTimeout(() => b.style.opacity = "0.5", 0); });
+        b.addEventListener("dragend", () => { b.style.opacity = "1"; dragged = null; });
+      });
+
+      slots.forEach((slot) => {
+        slot.addEventListener("dragover", (e) => { e.preventDefault(); slot.classList.add("over"); });
+        slot.addEventListener("dragleave", () => slot.classList.remove("over"));
+        slot.addEventListener("drop", (e) => {
+          e.preventDefault();
+          slot.classList.remove("over");
+          if (!dragged || slot.children.length > 0) return;
+          slot.textContent = "";
+          slot.appendChild(dragged);
+        });
+      });
+
+      document.getElementById("bank").addEventListener("dragover", (e) => e.preventDefault());
+      document.getElementById("bank").addEventListener("drop", (e) => { e.preventDefault(); if (dragged) document.getElementById("bank").appendChild(dragged); });
+
+      document.getElementById("checkFlow").addEventListener("click", () => {
+        const expected = { sign: ["sign0", "sign1", "sign2"], ver: ["ver0", "ver1", "ver2"] };
+        let ok = true;
+
+        slots.forEach((slot) => {
+          const zone = slot.dataset.zone;
+          const pos = Number(slot.dataset.pos);
+          const block = slot.querySelector(".block");
+          const id = block ? block.dataset.id : "";
+          const correct = id === expected[zone][pos];
+          if (!correct) ok = false;
+          if (block) {
+            if (correct) block.classList.add("correct");
+            else {
+              block.classList.remove("correct");
+              block.classList.add("shake");
+              setTimeout(() => { document.getElementById("bank").appendChild(block); slot.textContent = `Step ${pos + 1}`; }, 360);
+            }
+          }
+        });
+
+        if (ok) {
+          state.module5FlowDone = true;
+          document.getElementById("flowHint").textContent = "Perfect flow.";
+          document.getElementById("flowHint").classList.add("success-note");
+          showToast("Flow correct. Next step unlocked.", "success");
+          setTimeout(() => nextStep(5), 600);
+        } else {
+          setError(document.getElementById("m5Flow"), "Wrong placement detected. Try again.", "flowHint");
+        }
+      });
+    }
+
+    function getQuizExplain(q) {
+      if (q === "q1") return "Signing uses Alice's PRIVATE key.";
+      if (q === "q2") return "Verification uses Alice's PUBLIC key.";
+      return "Mismatch means integrity failure (tampering).";
+    }
+
+    function bindScenarioQuiz() {
+      const quiz = document.getElementById("m5Quiz");
+      const answers = {};
+
+      quiz.querySelectorAll(".quiz-q").forEach((q) => {
+        const qId = q.dataset.q;
+        const ans = q.dataset.answer;
+        q.querySelectorAll(".opt").forEach((opt) => {
+          opt.addEventListener("click", () => {
+            q.querySelectorAll(".opt").forEach((o) => o.classList.remove("correct", "wrong", "shake"));
+            const chosen = opt.dataset.v;
+            answers[qId] = chosen;
+            if (chosen === ans) {
+              opt.classList.add("correct");
+              const hint = document.getElementById(`${qId}Hint`);
+              hint.textContent = "Correct.";
+              hint.classList.add("success-note");
+            } else {
+              opt.classList.add("wrong", "shake");
+              document.getElementById(`${qId}Hint`).textContent = getQuizExplain(qId);
+            }
+            checkFinalQuiz(answers);
+          });
+        });
+      });
+    }
+
+    function renderFinalSummary() {
+      const area = document.getElementById("summaryArea");
+      area.innerHTML = `
+        <div class="final-card shine success-burst">
+          <h3>Final Summary</h3>
+          <div class="stack" style="margin-top:8px;">
+            <div>1. Write message → hash with SHA-256 → sign hash with private key.</div>
+            <div>2. Send message + signature + public key.</div>
+            <div>3. Receiver verifies signature and checks hash consistency.</div>
+          </div>
+          <div class="mini-card" style="margin-top:10px;">You've learned: <strong>3 cryptographic concepts</strong>, <strong>2 key types</strong>, <strong>1 complete protocol</strong>.</div>
+          <div style="margin-top:12px;"><span class="badge">🏆 Digital Signature Expert</span></div>
+        </div>`;
+    }
+
+    function showConfetti() {
+      const canvas = document.getElementById("confetti");
+      const ctx = canvas.getContext("2d");
+      canvas.hidden = false;
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const pieces = Array.from({ length: 180 }, () => ({
+        x: Math.random() * canvas.width,
+        y: -20 - Math.random() * canvas.height,
+        s: 4 + Math.random() * 8,
+        vx: -2 + Math.random() * 4,
+        vy: 2 + Math.random() * 4,
+        r: Math.random() * Math.PI,
+        vr: -0.2 + Math.random() * 0.4,
+        c: ["#6c63ff", "#00d4ff", "#33d17a", "#ffd24a", "#ff5d6c"][Math.floor(Math.random() * 5)]
+      }));
+
+      let frame = 0;
+      function draw() {
+        frame += 1;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach((p) => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.r += p.vr;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.r);
+          ctx.fillStyle = p.c;
+          ctx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * 0.6);
+          ctx.restore();
+        });
+        if (frame < 220) requestAnimationFrame(draw);
+        else {
+          canvas.hidden = true;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+      draw();
+    }
+
+    function checkFinalQuiz(answers) {
+      const correct = { q1: "private", q2: "alicepub", q3: "tampered" };
+      if (Object.keys(answers).length !== 3) return;
+      const score = Object.keys(correct).reduce((acc, k) => acc + (answers[k] === correct[k] ? 1 : 0), 0);
+      state.quizScore = score;
+      const hint = document.getElementById("quizHint");
+      if (score === 3) {
+        hint.textContent = "All correct. Outstanding.";
+        hint.classList.add("success-note");
+        showConfetti();
+        renderFinalSummary();
+      } else {
+        hint.textContent = `Score: ${score}/3. Correct the wrong answers.`;
+        hint.classList.remove("success-note");
+      }
+    }
+
+    function render() {
+      renderTopBar();
+      const root = document.getElementById("moduleRoot");
+      const step = state.moduleSteps[state.currentModule] || 0;
+      if (state.currentModule === 0) root.innerHTML = renderModule0(step);
+      if (state.currentModule === 1) root.innerHTML = renderModule1(step);
+      if (state.currentModule === 2) root.innerHTML = renderModule2(step);
+      if (state.currentModule === 3) root.innerHTML = renderModule3(step);
+      if (state.currentModule === 4) root.innerHTML = renderModule4(step);
+      if (state.currentModule === 5) root.innerHTML = renderModule5(step);
+
+      if (state.currentModule === 0) bindModule0(step);
+      if (state.currentModule === 1) bindModule1(step);
+      if (state.currentModule === 2) bindModule2(step);
+      if (state.currentModule === 3) bindModule3(step);
+      if (state.currentModule === 4) bindModule4(step);
+      if (state.currentModule === 5) bindModule5(step);
+    }
+
+    window.addEventListener("resize", () => {
+      const c = document.getElementById("confetti");
+      if (!c.hidden) {
+        c.width = window.innerWidth;
+        c.height = window.innerHeight;
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
