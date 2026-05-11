@@ -1591,6 +1591,101 @@
 
     const moduleStepsTotal = { 0: 5, 1: 6, 2: 4, 3: 2, 4: 3, 5: 4 };
 
+    const LS_KEY = "dslab_v1";
+
+    function saveState() {
+      try {
+        const snapshot = {
+          currentModule: state.currentModule,
+          unlockedModules: state.unlockedModules,
+          moduleSteps: state.moduleSteps,
+          userMessage: state.userMessage,
+          documentName: state.documentName,
+          messageHash: state.messageHash,
+          messageHashes: state.messageHashes,
+          uploadedFile: state.uploadedFile,
+          selectedAlgo: state.selectedAlgo,
+          selectedKeySize: state.selectedKeySize,
+          keyPair: {
+            publicKeyB64: state.keyPair.publicKeyB64,
+            privateKeyB64: state.keyPair.privateKeyB64,
+            publicKeyPem: state.keyPair.publicKeyPem,
+            privateKeyPem: state.keyPair.privateKeyPem,
+          },
+          signatureB64: state.signatureB64,
+          quizScore: state.quizScore,
+          module5FlowDone: state.module5FlowDone,
+          module5ScenarioDone: state.module5ScenarioDone,
+          module5AttackSeen: state.module5AttackSeen,
+          progressDisplay: state.progressDisplay,
+          practiceHashAlgo: state.practiceHashAlgo,
+          practiceMessage: state.practiceMessage,
+          practiceSignatureB64: state.practiceSignatureB64,
+          showProcessMap: state.showProcessMap,
+          selectedSigningKeyType: state.selectedSigningKeyType,
+          mapIntroSeen: state.mapIntroSeen,
+        };
+        localStorage.setItem(LS_KEY, JSON.stringify(snapshot));
+      } catch(e) { /* quota exceeded or private mode */ }
+    }
+
+    async function loadState() {
+      try {
+        const raw = localStorage.getItem(LS_KEY);
+        if (!raw) return;
+        const s = JSON.parse(raw);
+        state.currentModule         = s.currentModule         ?? 0;
+        state.unlockedModules       = s.unlockedModules       ?? [0];
+        state.moduleSteps           = s.moduleSteps           ?? { 0:0,1:0,2:0,3:0,4:0,5:0 };
+        state.userMessage           = s.userMessage           ?? "";
+        state.documentName          = s.documentName          ?? "";
+        state.messageHash           = s.messageHash           ?? "";
+        state.messageHashes         = s.messageHashes         ?? { "SHA-256":"","SHA-384":"","SHA-512":"" };
+        state.uploadedFile          = s.uploadedFile          ?? { name:"", size:0 };
+        state.selectedAlgo          = s.selectedAlgo          ?? "";
+        state.selectedKeySize       = s.selectedKeySize       ?? "2048";
+        state.signatureB64          = s.signatureB64          ?? "";
+        state.quizScore             = s.quizScore             ?? 0;
+        state.module5FlowDone       = s.module5FlowDone       ?? false;
+        state.module5ScenarioDone   = s.module5ScenarioDone   ?? false;
+        state.module5AttackSeen     = s.module5AttackSeen     ?? { asIs:false, tampered:false };
+        state.progressDisplay       = s.progressDisplay       ?? 0;
+        state.practiceHashAlgo      = s.practiceHashAlgo      ?? "SHA-256";
+        state.practiceMessage       = s.practiceMessage       ?? "";
+        state.practiceSignatureB64  = s.practiceSignatureB64  ?? "";
+        state.showProcessMap        = s.showProcessMap        ?? true;
+        state.selectedSigningKeyType= s.selectedSigningKeyType?? "";
+        state.mapIntroSeen          = s.mapIntroSeen          ?? false;
+
+        if (s.keyPair) {
+          state.keyPair.publicKeyB64  = s.keyPair.publicKeyB64  ?? "";
+          state.keyPair.privateKeyB64 = s.keyPair.privateKeyB64 ?? "";
+          state.keyPair.publicKeyPem  = s.keyPair.publicKeyPem  ?? "";
+          state.keyPair.privateKeyPem = s.keyPair.privateKeyPem ?? "";
+        }
+
+        // Re-import CryptoKey objects
+        if (state.keyPair.publicKeyB64 && state.keyPair.privateKeyB64 && state.selectedAlgo) {
+          const importAlgo = state.selectedAlgo === "ECDSA"
+            ? { name: "ECDSA", namedCurve: state.selectedKeySize }
+            : { name: state.selectedAlgo, hash: "SHA-256" };
+          const [pubKey, privKey] = await Promise.all([
+            crypto.subtle.importKey("spki",  base64ToArrayBuffer(state.keyPair.publicKeyB64),  importAlgo, true, ["verify"]),
+            crypto.subtle.importKey("pkcs8", base64ToArrayBuffer(state.keyPair.privateKeyB64), importAlgo, true, ["sign"]),
+          ]);
+          state.keyPair.publicKey  = pubKey;
+          state.keyPair.privateKey = privKey;
+        }
+
+        // Re-hydrate ArrayBuffers from B64 strings
+        if (state.signatureB64)         state.signature         = base64ToArrayBuffer(state.signatureB64);
+        if (state.practiceSignatureB64) state.practiceSignature = base64ToArrayBuffer(state.practiceSignatureB64);
+        if (state.messageHash)          state.messageHashBuffer = hexToArrayBuffer(state.messageHash);
+      } catch(e) {
+        console.warn("dslab: could not restore state:", e);
+      }
+    }
+
     const modules = [
       { id: 0, icon: "🎬", name: "Why Signatures?" },
       { id: 1, icon: "#️⃣", name: "SHA Hashing" },
@@ -1620,6 +1715,13 @@
       let bin = "";
       bytes.forEach((b) => bin += String.fromCharCode(b));
       return btoa(bin);
+    }
+
+    function base64ToArrayBuffer(b64) {
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return bytes.buffer;
     }
 
     function hexToArrayBuffer(hex) {
@@ -3671,6 +3773,7 @@ Signature: _______________`;
     }
 
     function render() {
+      saveState();
       renderTopBar();
       const root = document.getElementById("moduleRoot");
       if (state.showProcessMap) {
@@ -3748,7 +3851,8 @@ Signature: _______________`;
       const enterBtn = document.getElementById("enterLabBtn");
       const resizeRain = startSplashRain();
       setTimeout(() => enterBtn.classList.add("show"), 2500);
-      enterBtn.addEventListener("click", () => {
+      enterBtn.addEventListener("click", async () => {
+        await stateReady;
         splash.style.opacity = "0";
         setTimeout(() => {
           cancelAnimationFrame(splashAnim);
@@ -3760,6 +3864,7 @@ Signature: _______________`;
       return resizeRain;
     }
 
+    const stateReady = loadState();
     const resizeSplashRain = initSplash();
 
     window.addEventListener("resize", () => {
