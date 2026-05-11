@@ -6,7 +6,7 @@
   <title>Digital Signatures Lab</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;600&family=Sora:wght@400;600&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg: #0a0a0f;
@@ -26,10 +26,72 @@
     * { box-sizing: border-box; }
     html, body { margin: 0; min-height: 100%; }
     body {
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      font-family: "Sora", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
       overflow-x: hidden;
+    }
+
+    #splash {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: #0a0a0f;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      transition: opacity .6s ease;
+    }
+
+    #splashRain {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .splash-overlay {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      display: grid;
+      gap: 10px;
+      padding: 18px;
+      width: min(760px, 96vw);
+    }
+
+    .splash-icon {
+      font-size: clamp(3.2rem, 11vw, 6rem);
+      filter: drop-shadow(0 0 26px rgba(0, 212, 255, 0.56));
+      animation: splashPulse 1.8s ease-in-out infinite;
+    }
+
+    .splash-title {
+      font-family: "Orbitron", sans-serif;
+      font-size: clamp(1.7rem, 6vw, 4rem);
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      color: #e9f8ff;
+      text-shadow: 0 0 20px rgba(0,212,255,0.55);
+    }
+
+    .splash-sub {
+      color: #d4ddff;
+      font-size: clamp(0.98rem, 2.1vw, 1.2rem);
+      margin-bottom: 6px;
+    }
+
+    .splash-enter {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .45s ease;
+      justify-self: center;
+    }
+
+    .splash-enter.show {
+      opacity: 1;
+      pointer-events: auto;
+      animation: fadeInUp .45s ease forwards;
     }
 
     .bg-gradient {
@@ -86,8 +148,9 @@
       margin-bottom: 10px;
     }
 
-    .progress-title { font-weight: 700; letter-spacing: 0.3px; font-size: 0.95rem; }
+    .progress-title { font-weight: 700; letter-spacing: 0.3px; font-size: 0.95rem; font-family: "Orbitron", sans-serif; }
     .progress-sub { color: var(--muted); font-size: 0.86rem; }
+    .progress-row .progress-sub strong { color: var(--cyan); font-family: "JetBrains Mono", monospace; font-size: 0.96rem; }
 
     .progress-wrap {
       background: rgba(255,255,255,0.1);
@@ -107,31 +170,58 @@
 
     .module-tabs {
       display: grid;
-      grid-template-columns: repeat(6, minmax(96px, 1fr));
-      gap: 8px;
-      margin-top: 10px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
     }
 
     .module-tab {
       border: 1px solid var(--border);
-      background: rgba(255,255,255,0.02);
+      border-left: 4px solid transparent;
+      background: rgba(255,255,255,0.03);
       color: var(--text);
       border-radius: 12px;
-      padding: 8px 7px;
+      padding: 12px;
       cursor: pointer;
-      transition: transform .2s ease, border-color .2s ease, background .2s ease;
-      font-size: 0.8rem;
-      min-height: 54px;
+      transition: transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease, filter .2s ease;
+      min-height: 80px;
+      text-align: left;
+      font-family: "Orbitron", sans-serif;
+      position: relative;
     }
 
-    .module-tab:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(0,212,255,0.5); }
-    .module-tab.active { border-color: var(--cyan); background: rgba(0,212,255,0.12); }
-    .module-tab:disabled { opacity: 0.55; cursor: not-allowed; }
+    .module-tab .tab-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.08rem;
+      font-weight: 700;
+    }
+
+    .module-tab .tab-icon { font-size: 1.8rem; line-height: 1; }
+    .module-tab .tab-name { font-size: 0.86rem; }
+    .module-tab .tab-status { margin-top: 5px; font-size: 0.74rem; color: var(--muted); }
+    .module-tab .tab-status.completed { color: var(--green); }
+    .module-tab .tab-status.progress { color: var(--cyan); }
+    .module-tab:hover:not(:disabled) {
+      transform: translateY(-3px);
+      border-color: rgba(0,212,255,0.64);
+      box-shadow: 0 0 20px rgba(0,212,255,0.25);
+    }
+    .module-tab.active {
+      border-color: var(--cyan);
+      background: rgba(0,212,255,0.15);
+      box-shadow: 0 0 26px rgba(0,212,255,0.32);
+      transform: scale(1.02);
+    }
+    .module-tab.completed { border-left-color: var(--green); }
+    .module-tab.locked { opacity: 0.45; filter: grayscale(1); }
+    .module-tab:disabled { cursor: not-allowed; }
 
     #moduleRoot { padding: 18px; }
     .module-card { padding: 24px; }
 
-    h1, h2, h3, h4 { margin: 0; }
+    h1, h2, h3, h4 { margin: 0; font-family: "Orbitron", sans-serif; }
 
     .module-header {
       display: flex;
@@ -143,7 +233,7 @@
 
     .title {
       font-size: clamp(1.35rem, 3vw, 2rem);
-      font-weight: 800;
+      font-weight: 900;
       margin-bottom: 8px;
       background: linear-gradient(90deg, #fff, #d5d9ff 50%, #9ceeff 100%);
       -webkit-background-clip: text;
@@ -157,6 +247,7 @@
       line-height: 1.6;
       max-width: 900px;
       font-size: 1rem;
+      font-family: "Sora", sans-serif;
     }
 
     .inside-step {
@@ -281,12 +372,13 @@
       background: linear-gradient(110deg, rgba(108,99,255,0.25), rgba(0,212,255,0.15));
       color: #f4f6ff;
       border-radius: 11px;
-      padding: 11px 15px;
+      padding: 11px 17px;
       cursor: pointer;
       font-weight: 700;
       letter-spacing: 0.2px;
       transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
-      font-size: 1rem;
+      font-size: 0.96rem;
+      font-family: "Sora", sans-serif;
     }
 
     .btn:hover:not(:disabled) {
@@ -300,6 +392,18 @@
     .btn-secondary {
       border-color: rgba(0,212,255,0.45);
       background: linear-gradient(110deg, rgba(0,212,255,0.22), rgba(108,99,255,0.16));
+      padding: 8px 16px;
+      font-size: 0.88rem;
+      opacity: 0.8;
+    }
+
+    .btn-primary {
+      padding: 14px 32px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, rgba(108,99,255,0.4), rgba(0,212,255,0.3));
+      box-shadow: 0 0 24px rgba(0,212,255,0.35);
+      animation: pulseGlow 2.5s infinite;
     }
 
     .btn-danger {
@@ -327,9 +431,28 @@
 
     textarea { min-height: 130px; resize: vertical; }
 
+    select {
+      width: 100%;
+      border-radius: 11px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(11, 12, 20, 0.75);
+      color: #fff;
+      padding: 10px 12px;
+      font: inherit;
+      outline: none;
+      transition: border-color .2s ease, box-shadow .2s ease;
+      font-size: 1rem;
+      font-family: "Sora", sans-serif;
+    }
+
+    select:focus {
+      border-color: rgba(0,212,255,0.7);
+      box-shadow: 0 0 0 3px rgba(0,212,255,0.18);
+    }
+
     code.hash {
       word-break: break-all;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 0.9rem;
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(255,255,255,0.14);
@@ -433,10 +556,163 @@
       display: grid;
       gap: 8px;
       align-content: start;
+      font-family: "JetBrains Mono", monospace;
     }
 
     .key-card.public { box-shadow: 0 0 18px rgba(0,212,255,0.2); border-color: rgba(0,212,255,0.45); }
     .key-card.private { box-shadow: 0 0 18px rgba(108,99,255,0.24); border-color: rgba(108,99,255,0.45); }
+
+    .file-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(0,212,255,0.4);
+      padding: 5px 9px;
+      border-radius: 8px;
+      background: rgba(0,212,255,0.1);
+      font-size: 0.82rem;
+      margin-bottom: 7px;
+      font-family: "JetBrains Mono", monospace;
+      color: #c4f7ff;
+    }
+
+    .hash-card-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 4px;
+      font-family: "JetBrains Mono", monospace;
+    }
+
+    .hash-card-accent-256 { border-color: rgba(0,212,255,0.5); }
+    .hash-card-accent-384 { border-color: rgba(108,99,255,0.5); }
+    .hash-card-accent-512 { border-color: rgba(255,210,74,0.5); }
+
+    .hash-preview {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.84rem;
+      color: #d8f7ff;
+      margin-top: 8px;
+      word-break: break-all;
+    }
+
+    .data-from-module {
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 10px;
+      padding: 10px;
+      background: rgba(255,255,255,0.03);
+      animation: fadeInUp .42s ease;
+    }
+
+    .data-tag {
+      display: inline-block;
+      background: rgba(0,212,255,0.15);
+      border: 1px solid rgba(0,212,255,0.4);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 0.78rem;
+      color: var(--cyan);
+      font-family: "JetBrains Mono", monospace;
+      margin-bottom: 6px;
+    }
+
+    .data-content { font-size: 0.98rem; color: #e8edff; }
+
+    .algo-card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      background: rgba(255,255,255,0.03);
+      cursor: pointer;
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+      min-height: 170px;
+    }
+
+    .algo-card:hover { transform: translateY(-2px); }
+    .algo-card .algo-title { font-family: "Orbitron", sans-serif; font-size: 1.1rem; margin-top: 4px; }
+    .algo-card.selected {
+      border-color: rgba(0,212,255,0.74);
+      box-shadow: 0 0 22px rgba(0,212,255,0.24);
+      background: rgba(0,212,255,0.08);
+      position: relative;
+    }
+    .algo-card.selected::after {
+      content: "✓";
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      color: var(--green);
+      font-weight: 800;
+      font-size: 1.1rem;
+    }
+
+    .algo-explain {
+      border: 1px solid rgba(108,99,255,0.4);
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: rgba(108,99,255,0.1);
+      font-size: 0.94rem;
+      color: #e7ddff;
+    }
+
+    .radio-stack {
+      display: grid;
+      gap: 9px;
+      margin-top: 8px;
+    }
+
+    .radio-line {
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 10px;
+      padding: 9px 10px;
+      background: rgba(255,255,255,0.02);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .radio-meta { color: var(--muted); font-size: 0.84rem; }
+
+    .pem-preview {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.82rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: 8px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      margin-top: 6px;
+    }
+
+    .key-anatomy {
+      border: 1px solid rgba(0,212,255,0.38);
+      border-radius: 11px;
+      padding: 10px;
+      background: rgba(0,212,255,0.06);
+      margin-top: 10px;
+    }
+
+    .key-anatomy-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.7fr 1fr 2fr;
+      gap: 7px;
+      margin-top: 8px;
+      font-size: 0.86rem;
+      font-family: "JetBrains Mono", monospace;
+    }
+
+    .key-anatomy-grid div {
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 8px;
+      padding: 6px;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .key-anatomy-head {
+      color: #d0f7ff;
+      font-weight: 700;
+      border-color: rgba(0,212,255,0.36) !important;
+    }
 
     .warning {
       background: rgba(255,93,108,0.16);
@@ -561,8 +837,8 @@
     .char-compare {
       margin-top: 8px;
       display: grid;
-      grid-template-columns: repeat(64, minmax(8px, 1fr));
-      gap: 2px;
+      grid-template-columns: repeat(64, minmax(12px, 1fr));
+      gap: 3px;
     }
 
     .char-compare span {
@@ -577,6 +853,13 @@
 
     .char-compare span.good { background: rgba(51,209,122,.8); box-shadow: 0 0 8px rgba(51,209,122,.7); }
     .char-compare span.bad { background: rgba(255,93,108,.8); box-shadow: 0 0 8px rgba(255,93,108,.6); }
+
+    .match-counter {
+      margin-top: 10px;
+      font-size: 1.12rem;
+      font-weight: 700;
+      font-family: "JetBrains Mono", monospace;
+    }
 
     .attack {
       border: 1px solid rgba(255,93,108,.4);
@@ -678,11 +961,394 @@
       align-items: center;
       gap: 7px;
       font-weight: 800;
+      font-family: "JetBrains Mono", monospace;
       border: 1px solid rgba(255,210,74,.65);
       border-radius: 999px;
       padding: 8px 12px;
       background: rgba(255,210,74,.18);
       box-shadow: 0 0 18px rgba(255,210,74,.25);
+    }
+
+    .module-success-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 260;
+      display: grid;
+      place-items: center;
+      background: rgba(8, 30, 18, 0.82);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      animation: fadeOnly .2s ease;
+    }
+
+    .module-success-inner {
+      border: 1px solid rgba(51,209,122,0.58);
+      border-radius: 14px;
+      padding: 18px 20px;
+      min-width: 280px;
+      text-align: center;
+      box-shadow: 0 0 45px rgba(51,209,122,0.28);
+      background: rgba(51,209,122,0.12);
+      font-family: "Orbitron", sans-serif;
+    }
+
+    .module-success-inner .check { font-size: 2.4rem; color: var(--green); }
+
+    .attack-lab-card {
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 12px;
+      padding: 12px;
+      background: rgba(255,255,255,.03);
+    }
+
+    .hub-pipeline {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+      align-items: center;
+      gap: 0;
+      padding: 20px 14px;
+      max-width: min(900px, 100%);
+      margin: 0 auto;
+    }
+    .hub-node {
+      position: relative;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform .2s, border-color .2s, box-shadow .2s;
+      min-height: 140px;
+      display: grid;
+      place-content: center;
+      gap: 4px;
+      background: rgba(255,255,255,0.03);
+    }
+    .hub-node:hover { transform: translateY(-3px); border-color: rgba(0,212,255,0.65); box-shadow: 0 0 20px rgba(0,212,255,0.25); }
+    .hub-node.active { border-color: rgba(0,212,255,0.65); box-shadow: 0 0 22px rgba(0,212,255,0.28); animation: pulseGlow 2.5s infinite; }
+    .hub-node.done { border-color: rgba(51,209,122,0.7); box-shadow: 0 0 18px rgba(51,209,122,0.22); }
+    .hub-node.locked { opacity: 0.35; filter: grayscale(1); cursor: default; pointer-events: none; }
+    .hub-node[data-locked]:hover::after {
+      content: "Complete previous module first";
+      position: absolute;
+      bottom: -32px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(10,10,15,0.92);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.72rem;
+      color: var(--muted);
+      white-space: nowrap;
+      z-index: 10;
+    }
+    .hub-icon { font-size: 2rem; }
+    .hub-label { font-family: "Orbitron", sans-serif; font-size: 0.82rem; font-weight: 700; margin-top: 4px; }
+    .hub-sub { font-size: 0.72rem; color: var(--muted); }
+    .hub-done-badge { font-size: 0.7rem; color: var(--green); font-weight: 700; margin-top: 4px; }
+    .hub-todo-badge { font-size: 0.7rem; color: var(--cyan); margin-top: 4px; }
+    .pipe-connector { display: grid; align-items: center; gap: 4px; padding: 0 8px; min-width: 60px; }
+    .pipe-label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--muted); text-align: center; }
+    .pipe-line { height: 3px; background: rgba(255,255,255,0.15); border-radius: 999px; position: relative; overflow: hidden; }
+    .pipe-line.active-pipe { background: linear-gradient(90deg, var(--purple), var(--cyan)); }
+    .pipe-dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); top: -2px; box-shadow: 0 0 8px rgba(0,212,255,0.9); animation: hubDotFlow 1.8s linear infinite; opacity: 0; }
+    .pipe-line.active-pipe .pipe-dot { opacity: 1; }
+    @keyframes hubDotFlow {
+      0% { left: -10px; opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { left: 100%; opacity: 0; }
+    }
+    .alice-banner {
+      border: 1px solid rgba(108,99,255,0.35);
+      border-left: 3px solid var(--purple);
+      border-radius: 10px;
+      padding: 8px 12px;
+      background: rgba(108,99,255,0.08);
+      font-size: 0.88rem;
+      color: #d8d4ff;
+      margin-bottom: 10px;
+      font-family: "Sora", sans-serif;
+    }
+    .verify-callout { border: 1px solid rgba(108,99,255,0.35); border-radius: 14px; padding: 14px 18px; background: rgba(108,99,255,0.06); margin-top: 4px; }
+    .verify-callout-title { font-family: 'Orbitron', sans-serif; font-size: 0.82rem; color: #c7c2ff; margin-bottom: 10px; }
+    .verify-callout-steps { display: grid; gap: 8px; font-size: 0.92rem; line-height: 1.6; }
+    .vc-cyan { color: var(--cyan); font-weight: 600; }
+    .vc-green { color: var(--green); font-weight: 600; }
+    .vc-purple { color: #b0aaff; font-weight: 600; }
+    .vc-red { color: var(--red); font-weight: 600; }
+
+    .map-hero {
+      border: 1px solid rgba(0,212,255,0.3);
+      border-radius: 14px;
+      padding: 14px;
+      background: rgba(0,212,255,0.06);
+    }
+
+    .map-flow {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 10px;
+      align-items: center;
+    }
+
+    .map-node {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(255,255,255,0.03);
+      text-align: center;
+      min-height: 110px;
+      display: grid;
+      place-content: center;
+      gap: 4px;
+    }
+    .map-node.locked { opacity: .45; filter: grayscale(1); }
+    .map-node.active { border-color: rgba(0,212,255,0.62); box-shadow: 0 0 18px rgba(0,212,255,0.2); }
+    .map-node.done { border-color: rgba(51,209,122,.7); box-shadow: 0 0 16px rgba(51,209,122,.2); }
+
+    .map-node b { font-family: "Orbitron", sans-serif; font-size: 0.85rem; }
+    .map-arrow {
+      height: 3px;
+      background: linear-gradient(90deg, var(--purple), var(--cyan));
+      border-radius: 999px;
+      position: relative;
+      overflow: hidden;
+    }
+    .map-arrow::after {
+      content: "";
+      position: absolute;
+      top: -4px;
+      left: -16px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #dbfaff;
+      box-shadow: 0 0 10px rgba(0,212,255,0.8);
+      animation: flow 1.2s linear infinite;
+    }
+
+    .map-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 10px;
+    }
+
+    .map-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: rgba(255,255,255,0.03);
+      cursor: pointer;
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+      text-align: left;
+    }
+    .map-card:hover:not(.locked) {
+      transform: translateY(-2px);
+      border-color: rgba(0,212,255,0.6);
+      box-shadow: 0 0 18px rgba(0,212,255,0.22);
+    }
+    .map-card.locked {
+      opacity: .45;
+      cursor: not-allowed;
+      filter: grayscale(1);
+    }
+
+    .tab-btn {
+      padding: 9px 18px;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: "Sora", sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: background .2s, color .2s, border-color .2s;
+    }
+    .tab-btn.active {
+      background: rgba(0,212,255,0.12);
+      border-color: rgba(0,212,255,0.5);
+      color: var(--cyan);
+    }
+    .tab-panel { display: block; }
+
+    .drop-upload {
+      border: 1px dashed rgba(0,212,255,.56);
+      border-radius: 14px;
+      min-height: 170px;
+      padding: 14px;
+      display: grid;
+      place-content: center;
+      text-align: center;
+      background: rgba(0,212,255,0.06);
+      transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .drop-upload.over {
+      border-color: rgba(0,212,255,.9);
+      background: rgba(0,212,255,0.13);
+      box-shadow: 0 0 24px rgba(0,212,255,.24);
+    }
+    .drop-upload .upload-cta { font-family: "Orbitron", sans-serif; font-size: 1.02rem; }
+
+    .bit-flip {
+      position: relative;
+      overflow: hidden;
+    }
+    .bit-flip::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent 0%, rgba(255,93,108,.35) 50%, transparent 100%);
+      transform: translateX(-120%);
+      animation: bitFlipSweep .45s ease;
+      pointer-events: none;
+    }
+    .spark-wrap {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .spark {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255,93,108,.95);
+      box-shadow: 0 0 10px rgba(255,93,108,.7);
+      animation: sparkFly .62s ease forwards;
+    }
+
+    .diffusion-counter {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #ffb8c1;
+      margin-top: 10px;
+    }
+
+    .key-drag-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 10px;
+    }
+    .key-token {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(255,255,255,.03);
+      cursor: grab;
+      user-select: none;
+      text-align: center;
+      font-family: "JetBrains Mono", monospace;
+    }
+    .key-token:active { cursor: grabbing; }
+    .key-token.public { border-color: rgba(0,212,255,.55); }
+    .key-token.private { border-color: rgba(108,99,255,.6); box-shadow: 0 0 14px rgba(108,99,255,.2); }
+    .key-slot {
+      border: 1px dashed rgba(255,255,255,.35);
+      border-radius: 12px;
+      min-height: 64px;
+      padding: 8px;
+      display: grid;
+      place-content: center;
+      color: var(--muted);
+      margin-top: 8px;
+      background: rgba(255,255,255,.02);
+    }
+    .key-slot.over { border-color: rgba(0,212,255,.75); background: rgba(0,212,255,.11); }
+    .key-slot.ok { border-color: rgba(51,209,122,.75); background: rgba(51,209,122,.11); color: #d6ffe7; }
+    .key-slot.bad { border-color: rgba(255,93,108,.8); background: rgba(255,93,108,.12); color: #ffd2d8; }
+
+    .file-stamp {
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(255,255,255,.03);
+      display: grid;
+      justify-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+    .stamp-icon {
+      font-size: 2.5rem;
+      position: relative;
+    }
+    .stamp-badge {
+      position: absolute;
+      right: 26%;
+      top: 34%;
+      border: 2px solid rgba(51,209,122,.8);
+      color: #c9ffe2;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-family: "Orbitron", sans-serif;
+      font-size: 0.7rem;
+      background: rgba(51,209,122,.2);
+      box-shadow: 0 0 16px rgba(51,209,122,.3);
+      transform: rotate(-14deg) scale(0);
+      animation: stampPop .5s ease forwards;
+    }
+
+    .integrity-chain {
+      position: absolute;
+      inset: auto 0 14% 0;
+      display: grid;
+      place-items: center;
+      z-index: 1;
+      pointer-events: none;
+      opacity: .8;
+    }
+    .chain-track {
+      display: inline-flex;
+      gap: 6px;
+      font-family: "JetBrains Mono", monospace;
+      color: rgba(0,212,255,.75);
+      letter-spacing: .05em;
+      font-size: .85rem;
+      text-shadow: 0 0 12px rgba(0,212,255,.5);
+      animation: chainBuild 2.2s ease-in-out infinite;
+    }
+
+    .alert-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 400;
+      background: rgba(54, 0, 6, 0.86);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      animation: sirenFlash .8s ease-in-out 2;
+    }
+    .alert-inner {
+      border: 1px solid rgba(255,93,108,.8);
+      border-radius: 14px;
+      padding: 18px;
+      background: rgba(255,93,108,.14);
+      box-shadow: 0 0 40px rgba(255,93,108,.4);
+      max-width: 640px;
+    }
+    .alert-inner h3 { color: #ffd5da; font-size: 1.35rem; }
+    .alert-inner p { margin: 6px 0 0; color: #ffe8eb; }
+
+    .ai-tip {
+      border: 1px solid rgba(0,212,255,.35);
+      border-radius: 8px;
+      padding: 6px 8px;
+      background: rgba(0,212,255,.08);
+      font-size: .83rem;
+      color: #cff7ff;
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      font-family: "JetBrains Mono", monospace;
     }
 
     #toastWrap {
@@ -729,6 +1395,18 @@
       .hash-machine { grid-template-columns: 1fr; }
       .module-header { flex-direction: column; align-items: flex-start; }
       .step-screen { min-height: 480px; }
+      .key-anatomy-grid { grid-template-columns: 1fr; }
+      .module-tab .tab-name { font-size: 0.82rem; }
+      .module-tab .tab-status { font-size: 0.72rem; }
+    }
+
+    @media (max-width: 760px) {
+      .module-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .module-tab .tab-icon { font-size: 1.45rem; }
+      .module-tab { min-height: 92px; }
+      .char-compare { grid-template-columns: repeat(16, minmax(12px, 1fr)); }
+      .hub-pipeline { grid-template-columns: 1fr !important; gap: 8px; }
+      .pipe-connector, .hub-arrow { transform: rotate(90deg); margin: 4px auto; width: 60px; }
     }
 
     @keyframes gradientFlow {
@@ -750,6 +1428,11 @@
     @keyframes pulseGlow {
       0%,100% { box-shadow: 0 0 0 rgba(108,99,255,0); }
       50% { box-shadow: 0 0 18px rgba(0,212,255,0.32), 0 0 28px rgba(108,99,255,0.24); }
+    }
+
+    @keyframes splashPulse {
+      0%,100% { transform: scale(1); filter: drop-shadow(0 0 22px rgba(0,212,255,0.5)); }
+      50% { transform: scale(1.08); filter: drop-shadow(0 0 30px rgba(0,212,255,0.7)); }
     }
 
     @keyframes shake {
@@ -805,23 +1488,67 @@
       0% { left: -40%; }
       60%,100% { left: 130%; }
     }
+
+    @keyframes bitFlipSweep {
+      from { transform: translateX(-120%); opacity: 0; }
+      50% { opacity: 1; }
+      to { transform: translateX(120%); opacity: 0; }
+    }
+
+    @keyframes sparkFly {
+      from { transform: translateY(0) scale(1); opacity: 1; }
+      to { transform: translateY(-26px) scale(0.6); opacity: 0; }
+    }
+
+    @keyframes stampPop {
+      0% { transform: rotate(-14deg) scale(0); opacity: 0; }
+      70% { transform: rotate(-10deg) scale(1.08); opacity: 1; }
+      100% { transform: rotate(-12deg) scale(1); opacity: 1; }
+    }
+
+    @keyframes chainBuild {
+      0% { letter-spacing: .18em; opacity: .35; }
+      50% { letter-spacing: .06em; opacity: .95; }
+      100% { letter-spacing: .12em; opacity: .45; }
+    }
+
+    @keyframes sirenFlash {
+      0%,100% { background: rgba(54,0,6,.86); }
+      50% { background: rgba(130,0,10,.88); }
+    }
   </style>
 </head>
 <body>
   <div class="bg-gradient"></div>
   <div class="bg-grid"></div>
+  <div id="splash">
+    <canvas id="splashRain"></canvas>
+    <div class="integrity-chain">
+      <div class="chain-track">0xA1 • 0xB2 • 0xC3 • INTEGRITY • 0xD4 • 0xE5</div>
+    </div>
+    <div class="splash-overlay">
+      <div class="splash-icon">🔐</div>
+      <div class="splash-title">DIGITAL SIGNATURE LAB</div>
+      <div class="splash-sub">An interactive cryptography laboratory</div>
+      <div><span class="badge">v2.0 · Web Crypto API</span></div>
+      <button id="enterLabBtn" class="btn btn-primary splash-enter">ENTER LAB →</button>
+    </div>
+  </div>
 
   <canvas id="confetti" class="confetti-canvas" hidden></canvas>
   <div id="toastWrap"></div>
 
-  <main class="container">
+  <main class="container" id="appMain" style="display:none;">
     <section class="top glass">
       <div class="progress-row">
         <div>
           <div class="progress-title">Digital Signature Learning Path</div>
           <div class="progress-sub" id="progressText">Progress: 0 of 5 modules completed</div>
         </div>
-        <div class="progress-sub" id="moduleLabel">Module 0</div>
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <div class="progress-sub"><strong id="progressPercent">0%</strong> · <span id="moduleLabel">Module 0</span></div>
+          <button class="btn btn-secondary" id="openMapTop">🧭 Process Map</button>
+        </div>
       </div>
       <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
       <div id="moduleTabs" class="module-tabs"></div>
@@ -836,21 +1563,37 @@
       unlockedModules: [0],
       moduleSteps: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
       userMessage: "",
+      documentBytes: null,
+      documentName: "",
       messageHash: "",
       messageHashBuffer: null,
-      keyPair: { publicKey: null, privateKey: null, publicKeyB64: "", privateKeyB64: "" },
+      messageHashes: { "SHA-256": "", "SHA-384": "", "SHA-512": "" },
+      uploadedFile: { name: "", size: 0 },
+      selectedAlgo: "",
+      selectedKeySize: "2048",
+      keyPair: { publicKey: null, privateKey: null, publicKeyB64: "", privateKeyB64: "", publicKeyPem: "", privateKeyPem: "" },
       signature: null,
       signatureB64: "",
       quizScore: 0,
       verifyResult: null,
-      module5FlowDone: false
+      module5FlowDone: false,
+      module5ScenarioDone: false,
+      module5AttackSeen: { asIs: false, tampered: false },
+      progressDisplay: 0,
+      practiceHashAlgo: "SHA-256",
+      practiceMessage: "",
+      practiceSignature: null,
+      practiceSignatureB64: "",
+      showProcessMap: true,
+      selectedSigningKeyType: "",
+      mapIntroSeen: false
     };
 
-    const moduleStepsTotal = { 0: 5, 1: 6, 2: 3, 3: 2, 4: 3, 5: 2 };
+    const moduleStepsTotal = { 0: 5, 1: 6, 2: 4, 3: 2, 4: 3, 5: 4 };
 
     const modules = [
       { id: 0, icon: "🎬", name: "Why Signatures?" },
-      { id: 1, icon: "#️⃣", name: "SHA-256" },
+      { id: 1, icon: "#️⃣", name: "SHA Hashing" },
       { id: 2, icon: "🔐", name: "RSA Keys" },
       { id: 3, icon: "✍️", name: "Sign" },
       { id: 4, icon: "✅", name: "Verify" },
@@ -858,6 +1601,11 @@
     ];
 
     const textEncoder = new TextEncoder();
+    const algoExplain = {
+      "RSASSA-PKCS1-v1_5": "Classic deterministic RSA signature padding. Broad ecosystem compatibility.",
+      "RSA-PSS": "Modern RSA signature scheme with randomized salt. Preferred for new systems.",
+      "ECDSA": "Elliptic curve signatures with smaller keys and fast performance."
+    };
 
     function escapeHtml(s) {
       return (s || "").replace(/[&<>\"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
@@ -880,16 +1628,89 @@
       return arr.buffer;
     }
 
-    async function sha256(text) {
+    async function shaDigest(algorithm, text) {
       const encoded = textEncoder.encode(text);
-      const digest = await crypto.subtle.digest("SHA-256", encoded);
+      const digest = await crypto.subtle.digest(algorithm, encoded);
       return { hex: arrayBufferToHex(digest), buffer: digest };
+    }
+
+    async function shaDigestBuffer(algorithm, buffer) {
+      const digest = await crypto.subtle.digest(algorithm, buffer);
+      return { hex: arrayBufferToHex(digest), buffer: digest };
+    }
+
+    async function sha256(text) {
+      return shaDigest("SHA-256", text);
     }
 
     async function exportKeyB64(key, type) {
       const format = type === "public" ? "spki" : "pkcs8";
       const ab = await crypto.subtle.exportKey(format, key);
       return arrayBufferToBase64(ab);
+    }
+
+    function toPem(b64, type) {
+      const label = type === "public" ? "PUBLIC KEY" : "PRIVATE KEY";
+      const lines = b64.match(/.{1,64}/g) || [];
+      return `-----BEGIN ${label}-----\n${lines.join("\n")}\n-----END ${label}-----`;
+    }
+
+    function previewPem(pem, lines = 4) {
+      return pem.split("\n").slice(0, lines).join("\n");
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return `${bytes} B`;
+      const kb = bytes / 1024;
+      if (kb < 1024) return `${kb.toFixed(1)} KB`;
+      return `${(kb / 1024).toFixed(1)} MB`;
+    }
+
+    function getSelectedAlgoLabel() {
+      if (state.selectedAlgo === "RSASSA-PKCS1-v1_5") return "RSA-PKCS1-v1_5";
+      return state.selectedAlgo;
+    }
+
+    function getSignAlgorithm() {
+      if (state.selectedAlgo === "RSA-PSS") return { name: "RSA-PSS", saltLength: 32 };
+      if (state.selectedAlgo === "RSASSA-PKCS1-v1_5") return { name: "RSASSA-PKCS1-v1_5" };
+      return { name: "ECDSA", hash: "SHA-256" };
+    }
+
+    function getVerifyAlgorithm() {
+      if (state.selectedAlgo === "RSA-PSS") return { name: "RSA-PSS", saltLength: 32 };
+      if (state.selectedAlgo === "RSASSA-PKCS1-v1_5") return { name: "RSASSA-PKCS1-v1_5" };
+      return { name: "ECDSA", hash: "SHA-256" };
+    }
+
+    async function signWithCurrentAlgo(message, hashAlgo) {
+      if (state.selectedAlgo === "ECDSA") {
+        const data = textEncoder.encode(message);
+        const signature = await crypto.subtle.sign({ name: "ECDSA", hash: hashAlgo }, state.keyPair.privateKey, data);
+        return { signature, signatureB64: arrayBufferToBase64(signature), digestHex: null };
+      }
+      const digest = await shaDigest(hashAlgo, message);
+      const signature = await crypto.subtle.sign(getSignAlgorithm(), state.keyPair.privateKey, digest.buffer);
+      return { signature, signatureB64: arrayBufferToBase64(signature), digestHex: digest.hex };
+    }
+
+    async function verifyWithCurrentAlgo(message, signature, hashAlgo, overridePublicKey) {
+      const pubKey = overridePublicKey || state.keyPair.publicKey;
+      if (state.selectedAlgo === "ECDSA") {
+        const data = textEncoder.encode(message);
+        return crypto.subtle.verify({ name: "ECDSA", hash: hashAlgo }, pubKey, signature, data);
+      }
+      const digest = await shaDigest(hashAlgo, message);
+      return crypto.subtle.verify(getVerifyAlgorithm(), pubKey, signature, digest.buffer);
+    }
+
+    function dataFromModuleTag(moduleId, contentHtml) {
+      return `
+        <div class="data-from-module">
+          <span class="data-tag">From Module ${moduleId} ↗</span>
+          <div class="data-content">${contentHtml}</div>
+        </div>
+      `;
     }
 
     function copyText(txt) {
@@ -910,15 +1731,27 @@
       setTimeout(() => el.remove(), 2900);
     }
 
+    function showModuleCompleteOverlay(moduleId) {
+      const o = document.createElement("div");
+      o.className = "module-success-overlay";
+      o.innerHTML = `<div class="module-success-inner"><div class="check">✓</div><div>Module ${moduleId} Completed</div><div style="margin-top:6px; color:#d2ffe4;">${escapeHtml(modules[moduleId].name)}</div></div>`;
+      document.body.appendChild(o);
+      setTimeout(() => o.remove(), 800);
+    }
+
     function unlockModule(moduleId) {
       const next = moduleId + 1;
       if (next <= 5 && !state.unlockedModules.includes(next)) state.unlockedModules.push(next);
+      showModuleCompleteOverlay(moduleId);
       if (next <= 5) {
-        state.currentModule = next;
-        state.moduleSteps[next] = state.moduleSteps[next] || 0;
-        showToast(`Module ${next} Unlocked!`, "success");
+        setTimeout(() => {
+          state.moduleSteps[next] = state.moduleSteps[next] || 0;
+          showToast(`Module ${next} Unlocked!`, "success");
+          renderTopBar();
+        }, 800);
+      } else {
+        setTimeout(() => renderTopBar(), 800);
       }
-      render();
     }
 
     function setError(el, msg, hintId) {
@@ -954,7 +1787,11 @@
       render();
     }
 
-    function stepHeader(moduleId, title, subtitle) {
+    function aliceBanner(text) {
+      return `<div class="alice-banner">👩 <strong>Alice's story:</strong> ${text}</div>`;
+    }
+
+    function stepHeader(moduleId, title, subtitle, bannerText) {
       const step = state.moduleSteps[moduleId] + 1;
       const total = moduleStepsTotal[moduleId];
       return `
@@ -963,8 +1800,12 @@
             <h1 class="title">${title}</h1>
             <p class="subtitle">${subtitle}</p>
           </div>
-          <div class="inside-step">Step ${step} of ${total}</div>
+          <div style="display:grid; gap:8px; justify-items:end;">
+            <div class="inside-step">Step ${step} of ${total}</div>
+            <button class="btn btn-secondary" id="backToMapInline">← Back to Map</button>
+          </div>
         </div>
+        ${bannerText ? aliceBanner(bannerText) : ''}
       `;
     }
 
@@ -973,10 +1814,21 @@
       tabs.innerHTML = modules.map((m) => {
         const unlocked = state.unlockedModules.includes(m.id);
         const active = state.currentModule === m.id;
+        const completed = state.unlockedModules.includes(m.id + 1);
+        const locked = !unlocked;
+        let statusText = "→ In Progress";
+        let statusClass = "progress";
+        if (locked) {
+          statusText = "🔒 Locked";
+          statusClass = "";
+        } else if (completed) {
+          statusText = "✓ Completed";
+          statusClass = "completed";
+        }
         return `
-          <button class="module-tab ${active ? "active" : ""}" data-go="${m.id}" ${unlocked ? "" : "disabled"}>
-            <div>${m.icon} ${unlocked ? "" : "🔒"}</div>
-            <div style="margin-top:4px; font-weight:600;">${m.id}. ${m.name}</div>
+          <button class="module-tab ${active ? "active" : ""} ${completed ? "completed" : ""} ${locked ? "locked" : ""}" data-go="${m.id}" ${unlocked ? "" : "disabled"}>
+            <div class="tab-top"><span class="tab-icon">${m.icon}</span><span class="tab-name">${m.id}. ${m.name}</span></div>
+            <div class="tab-status ${statusClass}">${statusText}</div>
           </button>
         `;
       }).join("");
@@ -984,6 +1836,7 @@
       tabs.querySelectorAll("[data-go]").forEach((btn) => {
         btn.addEventListener("click", () => {
           state.currentModule = Number(btn.dataset.go);
+          state.showProcessMap = false;
           render();
         });
       });
@@ -995,8 +1848,35 @@
       const percent = (completed / 5) * 100;
       document.getElementById("progressBar").style.width = `${percent}%`;
       document.getElementById("progressText").textContent = `Progress: ${completed} of 5 modules completed`;
-      document.getElementById("moduleLabel").textContent = `Module ${state.currentModule}`;
+      animatePercent("progressPercent", percent);
+      document.getElementById("moduleLabel").textContent = state.showProcessMap ? "Process Map" : `Module ${state.currentModule}`;
       renderTabs();
+      const mapBtn = document.getElementById("openMapTop");
+      if (mapBtn) {
+        mapBtn.onclick = () => {
+          state.showProcessMap = true;
+          render();
+        };
+      }
+    }
+
+    function animatePercent(id, target) {
+      const end = Math.round(target);
+      if (state.progressDisplay === end) return;
+      const el = document.getElementById(id);
+      if (!el) return;
+      const start = state.progressDisplay;
+      const span = Math.max(1, Math.abs(end - start));
+      const duration = 420;
+      const startTime = performance.now();
+      function tick(now) {
+        const p = Math.min(1, (now - startTime) / duration);
+        const cur = Math.round(start + (end - start) * p);
+        el.textContent = `${cur}%`;
+        if (p < 1) requestAnimationFrame(tick);
+        else state.progressDisplay = end;
+      }
+      requestAnimationFrame(tick);
     }
 
     function hashDiffHTML(hashA, hashB) {
@@ -1019,6 +1899,66 @@
       return { diff, htmlA, htmlB };
     }
 
+    function bitDiffStats(bufferA, bufferB) {
+      const a = new Uint8Array(bufferA);
+      const b = new Uint8Array(bufferB);
+      const len = Math.min(a.length, b.length);
+      let diffBits = 0;
+      for (let i = 0; i < len; i += 1) {
+        let x = a[i] ^ b[i];
+        while (x) {
+          diffBits += x & 1;
+          x >>= 1;
+        }
+      }
+      const total = len * 8;
+      const percent = total ? Math.round((diffBits / total) * 100) : 0;
+      return { diffBits, totalBits: total, percent };
+    }
+
+    function sparkBurst(containerId, count = 22) {
+      const el = document.getElementById(containerId);
+      if (!el) return;
+      const wrap = document.createElement("div");
+      wrap.className = "spark-wrap";
+      for (let i = 0; i < count; i += 1) {
+        const s = document.createElement("span");
+        s.className = "spark";
+        s.style.left = `${8 + Math.random() * 84}%`;
+        s.style.top = `${45 + Math.random() * 35}%`;
+        s.style.animationDelay = `${Math.random() * 0.15}s`;
+        wrap.appendChild(s);
+      }
+      el.appendChild(wrap);
+      setTimeout(() => wrap.remove(), 700);
+    }
+
+    function showMitmAlert(text) {
+      const o = document.createElement("div");
+      o.className = "alert-overlay";
+      o.innerHTML = `<div class="alert-inner"><h3>🚨 HASH MISMATCH · SIGNATURE INVALID</h3><p>${escapeHtml(text)}</p><p>Public key verification failed after document tampering.</p></div>`;
+      document.body.appendChild(o);
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const beep = (freq, start, duration) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "square";
+          osc.frequency.value = freq;
+          gain.gain.value = 0.0001;
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(ctx.currentTime + start);
+          gain.gain.exponentialRampToValueAtTime(0.14, ctx.currentTime + start + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + duration);
+          osc.stop(ctx.currentTime + start + duration + 0.02);
+        };
+        beep(920, 0, 0.22);
+        beep(760, 0.28, 0.22);
+      } catch {}
+      setTimeout(() => o.remove(), 1500);
+    }
+
     function detailsBlock(label, value) {
       return `
         <details class="reveal">
@@ -1028,18 +1968,174 @@
       `;
     }
 
+    function pemBlock(label, pem, detailsId) {
+      return `
+        <div class="pem-preview">${escapeHtml(previewPem(pem, 4))}\n...</div>
+        <details class="reveal" id="${detailsId}">
+          <summary>Show full PEM ▾</summary>
+          <code class="hash">${escapeHtml(pem)}</code>
+        </details>
+      `;
+    }
+
+    function renderProcessMap() {
+      const hashDone = !!state.messageHash;
+      const keysDone = !!(state.keyPair.privateKey);
+      const signDone = !!(state.signature);
+      const verifyDone = state.unlockedModules.includes(5);
+
+      const nodeState = (done, active) => done ? "done" : active ? "active" : "locked";
+
+      return `
+        <div class="step-screen step-fade">
+          <div style="text-align:center; margin-bottom:16px;">
+            <h2 class="title" style="margin-bottom:6px;">Digital Signature Process Map</h2>
+            <p class="subtitle">This is how Alice securely signs her rental contract for Bob. Click any node to enter that module.</p>
+          </div>
+
+          <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:16px;">
+            <button class="btn btn-secondary" data-quick-go="0">📖 Start from Module 0</button>
+            <button class="btn btn-primary" data-quick-go="1">⚡ Jump to Hashing Lab</button>
+          </div>
+
+          <div class="hub-pipeline">
+            <div class="hub-node ${nodeState(false, true)}" data-go-module="0" title="Why Digital Signatures?">
+              <div class="hub-icon">📄</div>
+              <div class="hub-label">DOCUMENT</div>
+              <div class="hub-sub">Alice's rental contract</div>
+              ${hashDone ? '<div class="hub-done-badge">✓ Hashed</div>' : '<div class="hub-todo-badge">→ Start here</div>'}
+            </div>
+            <div class="pipe-connector">
+              <div class="pipe-label">SHA-256</div>
+              <div class="pipe-line ${hashDone ? "active-pipe" : ""}"><div class="pipe-dot"></div></div>
+            </div>
+            <div class="hub-node ${nodeState(keysDone, hashDone)} ${!hashDone ? "" : ""}" ${!hashDone ? 'data-locked="true" title="Complete previous module to unlock this step"' : 'data-go-module="1"'}>
+              <div class="hub-icon">#️⃣</div>
+              <div class="hub-label">HASH</div>
+              <div class="hub-sub">32-byte fingerprint</div>
+              ${hashDone ? `<div class="hub-done-badge">✓ Ready</div>` : `<div class="hub-todo-badge">🔒</div>`}
+            </div>
+            <div class="pipe-connector">
+              <div class="pipe-label">Private Key</div>
+              <div class="pipe-line ${keysDone ? "active-pipe" : ""}"><div class="pipe-dot"></div></div>
+            </div>
+            <div class="hub-node ${nodeState(signDone, keysDone)}" ${!keysDone ? 'data-locked="true" title="Complete previous module to unlock this step"' : 'data-go-module="3"'}>
+              <div class="hub-icon">✍️</div>
+              <div class="hub-label">SIGNATURE</div>
+              <div class="hub-sub">Sealed with Alice's key</div>
+              ${signDone ? `<div class="hub-done-badge">✓ Signed</div>` : `<div class="hub-todo-badge">🔒</div>`}
+            </div>
+            <div class="pipe-connector">
+              <div class="pipe-label">Public Key</div>
+              <div class="pipe-line ${signDone ? "active-pipe" : ""}"><div class="pipe-dot"></div></div>
+            </div>
+            <div class="hub-node ${nodeState(verifyDone, signDone)}" ${!signDone ? 'data-locked="true" title="Complete previous module to unlock this step"' : 'data-go-module="4"'}>
+              <div class="hub-icon">🔍</div>
+              <div class="hub-label">VERIFY</div>
+              <div class="hub-sub">Bob checks the seal</div>
+              ${verifyDone ? `<div class="hub-done-badge">✓ Verified</div>` : `<div class="hub-todo-badge">🔒</div>`}
+            </div>
+          </div>
+
+          <div class="verify-callout">
+            <div class="verify-callout-title">🔍 How Bob verifies Alice's signature</div>
+            <div class="verify-callout-steps">
+              <div>① Bob receives: <span class="vc-cyan">Document</span> + <span class="vc-purple">Signature</span> + <span class="vc-cyan">Alice's Public Key</span></div>
+              <div>② Decrypt signature with public key → <span class="vc-cyan">Hash A</span> &nbsp;|&nbsp; SHA-256(document) → <span class="vc-green">Hash B</span></div>
+              <div>③ If <span class="vc-green">Hash A = Hash B</span> → ✅ Valid &nbsp;&nbsp; If <span class="vc-red">Hash A ≠ Hash B</span> → ❌ Eve tampered</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function bindProcessMap() {
+      document.querySelectorAll("[data-quick-go]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const target = Number(btn.dataset.quickGo);
+          if (!state.unlockedModules.includes(target)) state.unlockedModules.push(target);
+          state.currentModule = target;
+          state.showProcessMap = false;
+          render();
+        });
+      });
+      document.querySelectorAll(".hub-node[data-go-module]").forEach((node) => {
+        node.addEventListener("click", () => {
+          const target = Number(node.dataset.goModule);
+          if (state.unlockedModules.includes(target) || target === 0 || target === 1) {
+            if (!state.unlockedModules.includes(target)) state.unlockedModules.push(target);
+            state.currentModule = target;
+            state.showProcessMap = false;
+            render();
+          }
+        });
+      });
+      document.querySelectorAll("[data-map-go]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          state.currentModule = Number(btn.dataset.mapGo);
+          state.showProcessMap = false;
+          render();
+        });
+      });
+    }
+
+    function renderHashCards(h256, h384, h512) {
+      return `
+        <div class="grid-3">
+          <div class="mini-card hash-card-accent-256">
+            <strong>SHA-256</strong>
+            <div class="hash-card-label">256-bit · 64 hex chars</div>
+            <div class="hash-preview">${escapeHtml(h256.slice(0, 32))}...</div>
+            <button class="btn btn-secondary" data-expand="h256">[...show full]</button>
+            <code class="hash" id="h256Full" style="display:none;">${escapeHtml(h256)}</code>
+          </div>
+          <div class="mini-card hash-card-accent-384">
+            <strong>SHA-384</strong>
+            <div class="hash-card-label">384-bit · 96 hex chars</div>
+            <div class="hash-preview">${escapeHtml(h384.slice(0, 32))}...</div>
+            <button class="btn btn-secondary" data-expand="h384">[...show full]</button>
+            <code class="hash" id="h384Full" style="display:none;">${escapeHtml(h384)}</code>
+          </div>
+          <div class="mini-card hash-card-accent-512">
+            <strong>SHA-512</strong>
+            <div class="hash-card-label">512-bit · 128 hex chars</div>
+            <div class="hash-preview">${escapeHtml(h512.slice(0, 32))}...</div>
+            <button class="btn btn-secondary" data-expand="h512">[...show full]</button>
+            <code class="hash" id="h512Full" style="display:none;">${escapeHtml(h512)}</code>
+          </div>
+        </div>
+        <p class="subtitle" style="margin-top:10px;">SHA-256 will be used for signing in the next modules.</p>
+      `;
+    }
+
+    function bindHashExpanders(scopeEl) {
+      scopeEl.querySelectorAll("[data-expand]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const id = btn.dataset.expand;
+          const full = document.getElementById(`${id}Full`);
+          const open = full.style.display !== "none";
+          full.style.display = open ? "none" : "block";
+          btn.textContent = open ? "[...show full]" : "[hide full]";
+        });
+      });
+    }
+
     function renderModule0(step) {
-      const header = stepHeader(0, "Module 0: Why Digital Signatures?", "One idea per step. Move through the core problems first, then solve the checkpoint.");
+      const header = stepHeader(0, "Module 0: Why Digital Signatures?", "Follow Alice, Bob, and Eve through a real contract signing scenario.", "Alice needs to send her rental contract to Bob — but how can Bob trust it wasn't changed by Eve?");
       if (step === 0) {
         return `${header}
           <div class="step-screen step-fade">
-            <div class="grid-3">
-              <div class="mini-card char-card alice"><div class="char-name">👩 Alice</div><div class="char-line concept-text">I want to send a message.</div></div>
-              <div class="mini-card char-card eve"><div class="char-name">🕵️ Eve</div><div class="char-line concept-text">I can intercept and change it.</div></div>
-              <div class="mini-card char-card bob"><div class="char-name">👨 Bob</div><div class="char-line concept-text">How do I know it is really from Alice?</div></div>
+            <div class="mini-card" style="border-color:rgba(0,212,255,0.3); background:rgba(0,212,255,0.05); margin-bottom:4px;">
+              <div style="font-family:'Orbitron',sans-serif; font-size:0.8rem; color:var(--cyan); margin-bottom:8px;">📖 THE SCENARIO — follows you through all 6 modules</div>
+              <div style="font-size:1.05rem; line-height:1.6;">👩 <strong>Alice</strong> wants to send a <strong>rental contract</strong> to 👨 <strong>Bob</strong>. The contract states <em>"Monthly Rent: $500"</em>. But 🕵️ <strong>Eve</strong> sits between them on the network and can intercept and modify anything.</div>
             </div>
-            <div class="envelope-track"><div class="evil-flash"></div><div class="envelope">✉️</div></div>
-            <div><button class="btn" id="nextM0">Got it →</button></div>
+            <div class="grid-3">
+              <div class="mini-card char-card alice"><div class="char-name">👩 Alice</div><div class="char-line concept-text">I need Bob to trust this contract is really from me — unmodified.</div></div>
+              <div class="mini-card char-card eve"><div class="char-name">🕵️ Eve</div><div class="char-line concept-text">I can intercept the contract and change "$500" to "$5000".</div></div>
+              <div class="mini-card char-card bob"><div class="char-name">👨 Bob</div><div class="char-line concept-text">How do I know this contract wasn't tampered with by Eve?</div></div>
+            </div>
+            <div class="envelope-track"><div class="evil-flash"></div><div class="envelope">📄</div></div>
+            <div><button class="btn btn-secondary" id="nextM0">Got it →</button></div>
           </div>`;
       }
       if (step === 1 || step === 2 || step === 3) {
@@ -1055,7 +2151,7 @@
               <div class="concept-text"><strong>${c.icon} ${c.title}</strong></div>
               <div class="concept-text" style="margin-top:10px; color:#d9defd;">${c.text}</div>
             </div>
-            <div><button class="btn" id="nextM0">Got it →</button></div>
+            <div><button class="btn btn-secondary" id="nextM0">Got it →</button></div>
           </div>`;
       }
 
@@ -1092,23 +2188,36 @@
     }
 
     function renderModule1(step) {
-      const header = stepHeader(1, "Module 1: Hashing with SHA-256", "Understand each property first. The tasks appear after the theory steps.");
+      const header = stepHeader(1, "Module 1: Hashing and Avalanche", "Understand why we hash first, then hash Alice's rental contract.", "Alice hashes her rental contract to create a unique 32-byte fingerprint.");
       if (step === 0) {
         return `${header}
-          <div class="step-screen step-fade centered-focus">
+          <div class="step-screen step-fade">
             <div class="hash-machine" style="width:min(920px,100%);">
-              <div class="machine-box concept-text">Any text, any length</div>
-              <div style="display:grid; justify-items:center; gap:8px;"><div class="gear"></div><div class="mini-card">SHA-256</div></div>
-              <div class="machine-box concept-text">64-char hex string</div>
+              <div class="machine-box concept-text">Any input<div class="subtitle" style="margin-top:6px;">Alice's contract: 1 MB PDF</div></div>
+              <div style="display:grid; justify-items:center; gap:8px;"><div class="gear"></div><div class="mini-card">SHA Family</div></div>
+              <div class="machine-box concept-text">Fixed fingerprint<div class="subtitle" style="margin-top:6px;">Always 32 bytes (SHA-256)</div></div>
             </div>
-            <button class="btn" id="nextM1">Got it →</button>
+            <div class="mini-card" style="border-color:rgba(255,210,74,0.4); background:rgba(255,210,74,0.06);">
+              <strong style="color:var(--yellow);">🤔 Why hash BEFORE signing?</strong>
+              <div class="subtitle" style="margin-top:8px; font-size:0.98rem; line-height:1.7;">RSA can only sign data <strong>smaller than the key size</strong>. A contract PDF could be megabytes — too large to sign directly. SHA-256 always produces exactly <strong>32 bytes</strong> no matter how large the input. We sign the hash, not the document. The hash uniquely represents the document.</div>
+              <div style="margin-top:10px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:8px; font-family:'JetBrains Mono',monospace; font-size:0.85rem;">
+                <div style="border:1px solid var(--border); border-radius:8px; padding:8px; text-align:center; color:var(--muted);">contract.pdf<br><span style="color:var(--red);">2.4 MB — too large</span></div>
+                <div style="color:var(--cyan);">→ SHA-256 →</div>
+                <div style="border:1px solid rgba(51,209,122,0.5); border-radius:8px; padding:8px; text-align:center; color:var(--green);">32 bytes<br>✓ perfect to sign</div>
+              </div>
+            </div>
+            <div class="ai-tip">🤖 Tip: 1 symbol change in the document should diffuse through ~50% of the hash bits.</div>
+            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+              <button class="btn btn-secondary" id="nextM1">Got it →</button>
+              <button class="btn btn-secondary" id="skipM1Practice">Skip theory → Practice</button>
+            </div>
           </div>`;
       }
 
       const prop = [
-        { t: "⚡ Deterministic", d: "Same input ALWAYS gives the same hash." },
-        { t: "🌊 Avalanche Effect", d: "Change one character and the output changes dramatically." },
-        { t: "🚫 One-way", d: "You cannot reverse the hash to recover the original text." }
+        { t: "⚡ Deterministic", d: "Same document -> same hash." },
+        { t: "🌊 Avalanche Effect", d: "1 character flip -> major hash diffusion." },
+        { t: "🚫 One-way", d: "Cannot reverse hash back to document." }
       ];
       if (step >= 1 && step <= 3) {
         const p = prop[step - 1];
@@ -1118,54 +2227,81 @@
               <div class="concept-text"><strong>${p.t}</strong></div>
               <div class="concept-text" style="margin-top:10px; color:#d9defd;">${p.d}</div>
             </div>
-            <button class="btn" id="nextM1">Got it →</button>
+            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+              <button class="btn btn-secondary" id="nextM1">Got it →</button>
+              <button class="btn btn-secondary" id="skipM1Practice">Skip theory → Practice</button>
+            </div>
           </div>`;
       }
 
       if (step === 4) {
         return `${header}
           <div class="step-screen step-fade">
-            <div class="mini-card">
-              <h3 class="concept-text">Avalanche Effect Demo</h3>
+            <div class="mini-card" id="avLab">
+              <h3 class="concept-text">Live Avalanche Lab</h3>
+              <p class="subtitle" style="margin-top:6px;">Eve changes "$500" to "$5000" — watch how completely the hash changes.</p>
               <div class="grid-2" style="margin-top:8px;">
-                <div>
+                <div id="avBoxA" class="hash-box">
                   <label>Input A</label>
-                  <input id="avA" type="text" value="Hello World" />
-                  <div class="hash-box">
-                    <details class="reveal">
-                      <summary>Show hash A ▾</summary>
-                      <code id="avHashA" class="hash hash-diff"></code>
-                    </details>
-                  </div>
+                  <input id="avA" type="text" value="Monthly Rent: $500" />
+                  <code id="avHashA" class="hash hash-diff"></code>
                 </div>
-                <div>
+                <div id="avBoxB" class="hash-box">
                   <label>Input B</label>
-                  <input id="avB" type="text" value="Hello World!" />
-                  <div class="hash-box">
-                    <details class="reveal">
-                      <summary>Show hash B ▾</summary>
-                      <code id="avHashB" class="hash hash-diff"></code>
-                    </details>
-                  </div>
+                  <input id="avB" type="text" value="Monthly Rent: $5000" />
+                  <code id="avHashB" class="hash hash-diff"></code>
                 </div>
               </div>
-              <div id="avCount" class="subtitle" style="margin-top:8px;"></div>
+              <div id="avCount" class="diffusion-counter"></div>
             </div>
-            <div><button class="btn" id="nextM1">Got it →</button></div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="btn btn-secondary" id="nextM1">Got it →</button>
+              <button class="btn btn-secondary" id="skipM1Practice">Skip theory → Practice</button>
+            </div>
           </div>`;
       }
 
+      const hasSavedHashes = !!(state.messageHashes["SHA-256"] && state.messageHashes["SHA-384"] && state.messageHashes["SHA-512"]);
+      const savedHashHtml = hasSavedHashes
+        ? renderHashCards(state.messageHashes["SHA-256"], state.messageHashes["SHA-384"], state.messageHashes["SHA-512"])
+        : "";
+      const defaultContract = `RENTAL CONTRACT
+Tenant: Alice Johnson
+Landlord: Bob Smith
+Property: 123 Main St, Apt 4B
+Monthly Rent: $500
+Duration: 12 months
+Start Date: 2024-02-01
+Special Terms: Pets allowed with deposit.
+Signature: _______________`;
+      const savedText = state.userMessage && !state.userMessage.startsWith("[File]") ? state.userMessage : defaultContract;
       return `${header}
         <div class="step-screen step-fade">
           <div class="mini-card pulse-glow" id="hashTask">
-            <h3 class="concept-text">Hash Your Message</h3>
-            <p class="subtitle" style="margin-top:6px;">Enter the message you want to sign.</p>
-            <textarea id="mainMessage" placeholder="Enter the message you want to sign..."></textarea>
-            <div style="display:flex; gap:10px; align-items:center; margin-top:10px;">
-              <button class="btn" id="hashBtn">🔨 Hash It</button>
+            <h3 class="concept-text">Hash Alice's Document</h3>
+            <p class="subtitle" style="margin-top:6px;">Write your own contract text or upload a real file — then compute its cryptographic fingerprint.</p>
+            <div class="ai-tip">🤖 Tip: Even changing one character completely changes the hash (avalanche effect).</div>
+            <div style="display:flex; gap:0; margin-top:14px; border-bottom:1px solid var(--border);">
+              <button class="tab-btn active" id="tabWrite">✍️ Write Document</button>
+              <button class="tab-btn" id="tabUpload">📁 Upload File</button>
+            </div>
+            <div id="panelWrite" class="tab-panel active" style="padding-top:12px;">
+              <div id="fileBadgeWrap" style="margin-bottom:6px;"></div>
+              <textarea id="mainMessage" style="min-height:180px; font-family:'JetBrains Mono',monospace; font-size:0.88rem;">${escapeHtml(savedText)}</textarea>
+              <div id="charCounter" class="subtitle" style="font-size:0.8rem; text-align:right; margin-top:4px;">${savedText.length} characters</div>
+            </div>
+            <div id="panelUpload" class="tab-panel" style="padding-top:12px; display:none;">
+              <div id="docDrop" class="drop-upload">
+                <div class="upload-cta">Drop file here to hash</div>
+                <div class="subtitle" style="margin-top:6px;">or choose manually</div>
+                <label class="btn btn-secondary" style="margin-top:10px; cursor:pointer;">Choose File<input type="file" id="fileInput" style="display:none"></label>
+              </div>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center; margin-top:12px; flex-wrap:wrap;">
+              <button class="btn btn-primary" id="hashBtn">🔨 Hash Document</button>
               <div id="hashLoad"></div>
             </div>
-            <div id="hashResult" style="margin-top:12px;"></div>
+            <div id="hashResult" style="margin-top:12px;">${savedHashHtml}</div>
             <div id="m1Hint" class="hint"></div>
           </div>
         </div>`;
@@ -1174,6 +2310,13 @@
     function bindModule1(step) {
       if (step <= 3) {
         document.getElementById("nextM1").addEventListener("click", () => nextStep(1));
+        const skip = document.getElementById("skipM1Practice");
+        if (skip) {
+          skip.addEventListener("click", () => {
+            state.moduleSteps[1] = 5;
+            render();
+          });
+        }
         return;
       }
       if (step === 4) {
@@ -1182,64 +2325,191 @@
         const outA = document.getElementById("avHashA");
         const outB = document.getElementById("avHashB");
         const countEl = document.getElementById("avCount");
+        const boxA = document.getElementById("avBoxA");
+        const boxB = document.getElementById("avBoxB");
         async function updateAvalanche() {
           const [ha, hb] = await Promise.all([sha256(avA.value), sha256(avB.value)]);
           const diff = hashDiffHTML(ha.hex, hb.hex);
+          const bits = bitDiffStats(ha.buffer, hb.buffer);
           outA.innerHTML = diff.htmlA;
           outB.innerHTML = diff.htmlB;
-          countEl.textContent = `${diff.diff} out of 64 characters are different`;
+          const pct = bits.percent;
+          const bar = `<div style="height:12px; border-radius:999px; background:rgba(255,255,255,0.1); overflow:hidden; margin:8px 0;"><div style="height:100%; width:${pct}%; background:${pct > 40 ? "linear-gradient(90deg,var(--red),var(--yellow))" : "var(--purple)"}; border-radius:999px; transition:width .3s ease;"></div></div>`;
+          countEl.innerHTML = `<div style="font-size:1.4rem; color:${pct > 40 ? "var(--yellow)" : "var(--muted)"};">${pct}% of bits changed</div>${bar}<div style="font-size:0.85rem; color:var(--muted);">${bits.diffBits} / ${bits.totalBits} bits flipped — ${pct > 40 ? "🌊 Strong avalanche effect!" : "try changing more characters"}</div>`;
+          boxA.classList.remove("bit-flip");
+          boxB.classList.remove("bit-flip");
+          void boxA.offsetWidth;
+          boxA.classList.add("bit-flip");
+          boxB.classList.add("bit-flip");
+          sparkBurst("avBoxA", 12);
+          sparkBurst("avBoxB", 12);
         }
         avA.addEventListener("input", updateAvalanche);
         avB.addEventListener("input", updateAvalanche);
         updateAvalanche();
         document.getElementById("nextM1").addEventListener("click", () => nextStep(1));
+        const skip = document.getElementById("skipM1Practice");
+        if (skip) {
+          skip.addEventListener("click", () => {
+            state.moduleSteps[1] = 5;
+            render();
+          });
+        }
         return;
       }
 
       const hashBtn = document.getElementById("hashBtn");
-      const msgEl = document.getElementById("mainMessage");
       const resultEl = document.getElementById("hashResult");
       const loadEl = document.getElementById("hashLoad");
       const task = document.getElementById("hashTask");
+      const fileInput = document.getElementById("fileInput");
+      const drop = document.getElementById("docDrop");
+      const mainMessage = document.getElementById("mainMessage");
+      const charCounter = document.getElementById("charCounter");
+      const tabWrite = document.getElementById("tabWrite");
+      const tabUpload = document.getElementById("tabUpload");
+      const panelWrite = document.getElementById("panelWrite");
+      const panelUpload = document.getElementById("panelUpload");
+      let selectedFile = null;
+      let activeTab = "write";
+      bindHashExpanders(task);
 
-      hashBtn.addEventListener("click", async () => {
-        const message = msgEl.value.trim();
-        if (!message) return setError(task, "Enter a message first.", "m1Hint");
+      // Tab switching
+      tabWrite.addEventListener("click", () => {
+        activeTab = "write";
+        tabWrite.classList.add("active"); tabUpload.classList.remove("active");
+        panelWrite.style.display = "block"; panelUpload.style.display = "none";
+      });
+      tabUpload.addEventListener("click", () => {
+        activeTab = "upload";
+        tabUpload.classList.add("active"); tabWrite.classList.remove("active");
+        panelUpload.style.display = "block"; panelWrite.style.display = "none";
+      });
+
+      // Character counter for textarea
+      if (mainMessage) {
+        mainMessage.addEventListener("input", () => {
+          if (charCounter) charCounter.textContent = mainMessage.value.length + " characters";
+        });
+      }
+
+      function showSelectedFile(f) {
+        state.uploadedFile.name = f.name;
+        state.uploadedFile.size = f.size;
+        state.documentName = f.name;
+        const badgeWrap = document.getElementById("fileBadgeWrap");
+        if (badgeWrap) badgeWrap.innerHTML = `<div class="file-badge">📄 ${escapeHtml(state.uploadedFile.name)} · ${formatFileSize(state.uploadedFile.size)}</div>`;
+        // Switch to write tab and show filename
+        activeTab = "write";
+        tabWrite.classList.add("active"); tabUpload.classList.remove("active");
+        panelWrite.style.display = "block"; panelUpload.style.display = "none";
+      }
+
+      async function runHashComputation() {
         hashBtn.disabled = true;
-        loadEl.innerHTML = `<span class="load"><span class="spinner"></span> Computing SHA-256...</span>`;
+        loadEl.innerHTML = `<span class="load"><span class="spinner"></span> Computing SHA-256 / SHA-384 / SHA-512...</span>`;
         resultEl.innerHTML = "";
         document.getElementById("m1Hint").textContent = "";
         try {
-          await new Promise((r) => setTimeout(r, 800));
-          const h = await sha256(message);
-          state.userMessage = message;
-          state.messageHash = h.hex;
-          state.messageHashBuffer = h.buffer;
-          resultEl.innerHTML = `
-            <div class="hash-box success-burst">
-              <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-                <strong>SHA-256 Fingerprint</strong>
-                <button id="copyHash" class="btn btn-secondary">Copy</button>
-              </div>
-              ${detailsBlock("Show details", h.hex)}
-              <p class="subtitle" style="margin-top:10px;">Remember this hash. It is your message fingerprint.</p>
-            </div>`;
-          document.getElementById("copyHash").addEventListener("click", () => copyText(h.hex));
-          setSuccess(task, "m1Hint", "Hash complete. Module 2 unlocked.");
-          setTimeout(() => unlockModule(1), 700);
+          let fileBuffer;
+          if (activeTab === "upload" && selectedFile) {
+            fileBuffer = await selectedFile.arrayBuffer();
+            state.userMessage = `[File] ${selectedFile.name} (${formatFileSize(selectedFile.size)})`;
+          } else {
+            const text = mainMessage ? mainMessage.value.trim() : "";
+            if (!text) {
+              hashBtn.disabled = false;
+              loadEl.innerHTML = "";
+              return setError(task, "Write or paste a document first.", "m1Hint");
+            }
+            state.userMessage = text;
+            fileBuffer = textEncoder.encode(text).buffer;
+          }
+          const [h256, h384, h512] = await Promise.all([
+            shaDigestBuffer("SHA-256", fileBuffer),
+            shaDigestBuffer("SHA-384", fileBuffer),
+            shaDigestBuffer("SHA-512", fileBuffer)
+          ]);
+          state.documentBytes = fileBuffer;
+          state.messageHash = h256.hex;
+          state.messageHashBuffer = h256.buffer;
+          state.messageHashes["SHA-256"] = h256.hex;
+          state.messageHashes["SHA-384"] = h384.hex;
+          state.messageHashes["SHA-512"] = h512.hex;
+          resultEl.innerHTML = renderHashCards(h256.hex, h384.hex, h512.hex);
+          bindHashExpanders(task);
+          setSuccess(task, "m1Hint", "Document hashed successfully. Module 2 unlocked.");
+          if (!state.unlockedModules.includes(2)) setTimeout(() => unlockModule(1), 700);
         } catch {
-          setError(task, "Could not hash your message.", "m1Hint");
+          setError(task, "Could not hash this document.", "m1Hint");
         } finally {
           hashBtn.disabled = false;
           loadEl.innerHTML = "";
         }
+      }
+
+      function acceptFile(f) {
+        if (!f) return;
+        selectedFile = f;
+        showSelectedFile(f);
+        // Read text content and place in textarea
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (mainMessage && typeof e.target.result === "string") {
+            mainMessage.value = e.target.result.slice(0, 4000);
+            if (charCounter) charCounter.textContent = mainMessage.value.length + " characters";
+          }
+        };
+        reader.readAsText(f);
+      }
+
+      drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
+      drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+      drop.addEventListener("drop", (e) => {
+        e.preventDefault();
+        drop.classList.remove("over");
+        const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        acceptFile(f);
       });
+      fileInput.addEventListener("change", () => {
+        const f = fileInput.files && fileInput.files[0];
+        acceptFile(f);
+      });
+      hashBtn.addEventListener("click", runHashComputation);
     }
 
     function renderModule2(step) {
-      const header = stepHeader(2, "Module 2: RSA Key Pair Generation", "Three focused steps: analogy, rules, then generate your keys.");
+      const header = stepHeader(2, "Module 2: Key Pair Generation Lab", "Choose your algorithm first, then generate and inspect key anatomy.", "Alice generates her key pair. She will sign with her private key. Bob uses her public key to verify.");
 
       if (step === 0) {
+        return `${header}
+          <div class="step-screen step-fade">
+            <div class="grid-3">
+              <div class="algo-card ${state.selectedAlgo === "RSASSA-PKCS1-v1_5" ? "selected" : ""}" data-algo="RSASSA-PKCS1-v1_5">
+                <div style="font-size:1.7rem;">🔐</div>
+                <div class="algo-title">RSA-PKCS1</div>
+                <div class="subtitle">RSA-PKCS1-v1_5</div>
+                <div style="margin-top:8px;">Classic standard, deterministic, widely supported.</div>
+              </div>
+              <div class="algo-card ${state.selectedAlgo === "RSA-PSS" ? "selected" : ""}" data-algo="RSA-PSS">
+                <div style="font-size:1.7rem;">🛡️</div>
+                <div class="algo-title">RSA-PSS</div>
+                <div class="subtitle">RSA-PSS</div>
+                <div style="margin-top:8px;">Modern probabilistic padding and stronger practical security.</div>
+              </div>
+              <div class="algo-card ${state.selectedAlgo === "ECDSA" ? "selected" : ""}" data-algo="ECDSA">
+                <div style="font-size:1.7rem;">⚡</div>
+                <div class="algo-title">ECDSA</div>
+                <div class="subtitle">Elliptic Curve</div>
+                <div style="margin-top:8px;">Smallest keys and fast signatures on trusted curves.</div>
+              </div>
+            </div>
+            <div id="algoExplainPanel" class="algo-explain" style="${state.selectedAlgo ? "" : "display:none;"}">${state.selectedAlgo ? escapeHtml(algoExplain[state.selectedAlgo]) : ""}</div>
+            <div><button class="btn btn-secondary" id="nextM2" ${state.selectedAlgo ? "" : "disabled"}>Next →</button></div>
+          </div>`;
+      }
+
+      if (step === 1) {
         return `${header}
           <div class="step-screen step-fade centered-focus">
             <div class="grid-2" style="width:min(980px,100%); gap:22px;">
@@ -1254,11 +2524,14 @@
                 <div class="concept-text" style="color:#d8ccff;">Keep secret</div>
               </div>
             </div>
-            <button class="btn" id="nextM2">I understand →</button>
+            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+              <button class="btn btn-secondary" id="nextM2">I understand →</button>
+              <button class="btn btn-secondary" id="skipM2ToGen">Skip theory → Practice</button>
+            </div>
           </div>`;
       }
 
-      if (step === 1) {
+      if (step === 2) {
         return `${header}
           <div class="step-screen step-fade centered-focus">
             <div class="grid-2" style="width:min(980px,100%); gap:18px;">
@@ -1269,24 +2542,48 @@
                 <div class="subtitle" style="margin-top:10px; font-size:1rem;">Example: Alice signs, Bob verifies with Alice's public key.</div>
               </div>
             </div>
-            <button class="btn" id="nextM2">Makes sense →</button>
+            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+              <button class="btn btn-secondary" id="nextM2">Makes sense →</button>
+              <button class="btn btn-secondary" id="skipM2ToGen">Skip theory → Practice</button>
+            </div>
           </div>`;
       }
+
+      const rsaSizes = [
+        { v: "2048", note: "Modern baseline standard" },
+        { v: "3072", note: "Higher security profile" },
+        { v: "4096", note: "Maximum security · slower generation" }
+      ];
+      const ecdsaSizes = [
+        { v: "P-256", note: "Balanced speed and security" },
+        { v: "P-384", note: "Higher security curve" },
+        { v: "P-521", note: "Maximum built-in curve strength" }
+      ];
+      const sizes = state.selectedAlgo === "ECDSA" ? ecdsaSizes : rsaSizes;
 
       return `${header}
         <div class="step-screen step-fade">
           <div class="mini-card pulse-glow" id="m2Task">
             <h3 class="concept-text">Now generate YOUR keys</h3>
+            <div class="subtitle">Selected algorithm: <strong>${escapeHtml(getSelectedAlgoLabel())}</strong></div>
+            <div class="ai-tip">🤖 Tip: 4096-bit RSA is heavier on CPU but increases brute-force resistance.</div>
             <div class="stack" style="margin-top:10px;">
               <div>
-                <strong>Choose key size</strong>
-                <div style="display:flex; gap:16px; margin-top:10px; flex-wrap:wrap; font-size:1.06rem;">
-                  <label><input type="radio" name="keysize" value="1024" checked /> 1024-bit (fast, educational)</label>
-                  <label><input type="radio" name="keysize" value="2048" /> 2048-bit (standard)</label>
+                <strong>Choose key size / curve</strong>
+                <div class="radio-stack">
+                  ${sizes.map((s) => `
+                    <label class="radio-line">
+                      <input type="radio" name="keysize" value="${s.v}" ${state.selectedKeySize === s.v ? "checked" : ""} />
+                      <div>
+                        <div>${escapeHtml(s.v)}${state.selectedAlgo === "ECDSA" ? "" : "-bit"}</div>
+                        <div class="radio-meta">${escapeHtml(s.note)}</div>
+                      </div>
+                    </label>
+                  `).join("")}
                 </div>
               </div>
-              <div style="display:flex; align-items:center; gap:10px;">
-                <button class="btn" id="genBtn">⚡ Generate Key Pair</button>
+              <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <button class="btn btn-primary" id="genBtn">⚡ Generate Key Pair</button>
                 <div id="genLoad"></div>
               </div>
               <div id="keyOutput"></div>
@@ -1298,8 +2595,31 @@
     }
 
     function bindModule2(step) {
-      if (step <= 1) {
+      if (step === 0) {
+        const nextBtn = document.getElementById("nextM2");
+        document.querySelectorAll("[data-algo]").forEach((card) => {
+          card.addEventListener("click", () => {
+            state.selectedAlgo = card.dataset.algo;
+            state.selectedKeySize = state.selectedAlgo === "ECDSA" ? "P-256" : "2048";
+            const panel = document.getElementById("algoExplainPanel");
+            panel.style.display = "block";
+            panel.textContent = algoExplain[state.selectedAlgo];
+            nextBtn.disabled = false;
+            document.querySelectorAll("[data-algo]").forEach((c) => c.classList.toggle("selected", c === card));
+          });
+        });
+        nextBtn.addEventListener("click", () => nextStep(2));
+        return;
+      }
+      if (step === 1 || step === 2) {
         document.getElementById("nextM2").addEventListener("click", () => nextStep(2));
+        const skip = document.getElementById("skipM2ToGen");
+        if (skip) {
+          skip.addEventListener("click", () => {
+            state.moduleSteps[2] = 3;
+            render();
+          });
+        }
         return;
       }
 
@@ -1313,68 +2633,131 @@
         btn.disabled = true;
         out.innerHTML = "";
         quiz.innerHTML = "";
-        load.innerHTML = `<span class="load"><span class="spinner"></span> Generating prime numbers...</span>`;
+        load.innerHTML = `<span class="load"><span class="spinner"></span> Preparing key generation...</span>`;
         document.getElementById("m2Hint").textContent = "";
         try {
-          const bits = Number(document.querySelector("input[name='keysize']:checked").value);
-          await new Promise((r) => setTimeout(r, 1500));
-          const kp = await crypto.subtle.generateKey({
-            name: "RSA-PSS",
-            modulusLength: bits,
-            publicExponent: new Uint8Array([1, 0, 1]),
-            hash: "SHA-256"
-          }, true, ["sign", "verify"]);
+          const selected = document.querySelector("input[name='keysize']:checked");
+          if (!selected) throw new Error("missing size");
+          state.selectedKeySize = selected.value;
+
+          const stages = state.selectedAlgo === "ECDSA"
+            ? [
+                { t: "Selecting curve parameters...", d: 320 },
+                { t: "Generating private scalar d...", d: 420 },
+                { t: "Deriving public point Q = d × G...", d: 420 },
+                { t: "Key pair ready ✓", d: 220 }
+              ]
+            : [
+                { t: "Generating random prime p...", d: 400 },
+                { t: "Generating random prime q...", d: 400 },
+                { t: "Computing modulus n = p × q...", d: 300 },
+                { t: "Deriving key components...", d: 400 },
+                { t: "Key pair ready ✓", d: 220 }
+              ];
+          const speedFactor = state.selectedAlgo !== "ECDSA" && Number(state.selectedKeySize) === 4096 ? 2.2 : 1;
+          for (const st of stages) {
+            load.innerHTML = `<span class="load"><span class="spinner"></span> ${escapeHtml(st.t)}</span>`;
+            await new Promise((r) => setTimeout(r, st.d * speedFactor));
+          }
+
+          const genParams = state.selectedAlgo === "ECDSA"
+            ? { name: "ECDSA", namedCurve: state.selectedKeySize }
+            : {
+                name: state.selectedAlgo || "RSA-PSS",
+                modulusLength: Number(state.selectedKeySize),
+                publicExponent: new Uint8Array([1, 0, 1]),
+                hash: "SHA-256"
+              };
+          const kp = await crypto.subtle.generateKey(genParams, true, ["sign", "verify"]);
 
           const [pubB64, privB64] = await Promise.all([exportKeyB64(kp.publicKey, "public"), exportKeyB64(kp.privateKey, "private")]);
+          const pubPem = toPem(pubB64, "public");
+          const privPem = toPem(privB64, "private");
           state.keyPair.publicKey = kp.publicKey;
           state.keyPair.privateKey = kp.privateKey;
           state.keyPair.publicKeyB64 = pubB64;
           state.keyPair.privateKeyB64 = privB64;
+          state.keyPair.publicKeyPem = pubPem;
+          state.keyPair.privateKeyPem = privPem;
 
           out.innerHTML = `
             <div class="grid-2 fade-in-up">
               <div class="key-card public">
                 <h4>🔓 PUBLIC KEY</h4>
                 <div class="subtitle">Share this with anyone who verifies your signatures.</div>
-                ${detailsBlock("Show details", pubB64)}
+                ${pemBlock("Public PEM", pubPem, "pubPemDetails")}
                 <button id="copyPub" class="btn btn-secondary">Copy Public Key</button>
               </div>
               <div class="key-card private">
                 <h4>🔑 PRIVATE KEY</h4>
                 <div class="warning">⚠️ NEVER share this key with anyone.</div>
-                ${detailsBlock("Show details", privB64)}
-                <button id="copyPriv" class="btn">Copy Private Key</button>
+                ${pemBlock("Private PEM", privPem, "privPemDetails")}
+                <button id="copyPriv" class="btn btn-secondary">Copy Private Key</button>
               </div>
-            </div>`;
+            </div>
+            <details class="reveal key-anatomy" open>
+              <summary>What's inside this key?</summary>
+              ${state.selectedAlgo === "ECDSA"
+                ? `
+                <div class="key-anatomy-grid">
+                  <div class="key-anatomy-head">Component</div><div class="key-anatomy-head">Symbol</div><div class="key-anatomy-head">Value</div><div class="key-anatomy-head">Meaning</div>
+                  <div>Curve</div><div>-</div><div>${escapeHtml(state.selectedKeySize)}</div><div>Defines the math environment for point operations.</div>
+                  <div>Private scalar</div><div>d</div><div>Secret random number</div><div>Used to generate signatures.</div>
+                  <div>Public point</div><div>Q</div><div>d × G</div><div>Public verification key on the curve.</div>
+                </div>`
+                : `
+                <div class="key-anatomy-grid">
+                  <div class="key-anatomy-head">Component</div><div class="key-anatomy-head">Symbol</div><div class="key-anatomy-head">Value</div><div class="key-anatomy-head">Meaning</div>
+                  <div>Modulus</div><div>n = p × q</div><div>${escapeHtml(state.selectedKeySize)}-bit number</div><div>Public, the lock that defines the RSA field.</div>
+                  <div>Public exponent</div><div>e</div><div>65537</div><div>Standard exponent used for verification.</div>
+                  <div>Private exponent</div><div>d</div><div>Secret</div><div>The private operation used to sign.</div>
+                  <div>Primes</div><div>p, q</div><div>Secret</div><div>Prime factors used to construct n.</div>
+                </div>`}
+            </details>`;
 
-          document.getElementById("copyPub").addEventListener("click", () => copyText(pubB64));
-          document.getElementById("copyPriv").addEventListener("click", () => copyText(privB64));
+          document.getElementById("copyPub").addEventListener("click", () => copyText(pubPem));
+          document.getElementById("copyPriv").addEventListener("click", () => copyText(privPem));
+          if (!state.unlockedModules.includes(3)) {
+            setSuccess(panel, "m2Hint", "Key pair generated. Module 3 unlocked.");
+            setTimeout(() => unlockModule(2), 700);
+          }
 
           quiz.innerHTML = `
             <div class="mini-card" style="margin-top:10px;">
-              <h4 class="concept-text">Mini Quiz</h4>
-              <p class="subtitle" style="margin-top:6px;">You want to SIGN a document. Which key do you use?</p>
-              <div class="choice-grid">
-                <button class="choice-card" data-k="public">🔓 Public Key</button>
-                <button class="choice-card" data-k="private">🔑 Private Key</button>
+              <h4 class="concept-text">Hands-on Key Check</h4>
+              <p class="subtitle" style="margin-top:6px;">Drag the correct key into the signing slot.</p>
+              <div class="key-drag-row">
+                <div class="key-token public" draggable="true" data-k="public">🔓 Public Key</div>
+                <div class="key-token private" draggable="true" data-k="private">🔑 Private Key</div>
               </div>
+              <div class="key-slot" id="m2SignSlot">Drop key here for SIGN operation</div>
               <div id="kqHint" class="hint"></div>
             </div>`;
-
-          quiz.querySelectorAll("[data-k]").forEach((c) => {
-            c.addEventListener("click", () => {
-              if (c.dataset.k === "private") {
-                c.classList.add("correct");
-                const hint = document.getElementById("kqHint");
-                hint.textContent = "Correct! Private key creates the signature.";
-                hint.classList.add("success-note");
-                setSuccess(panel, "m2Hint", "Key pair generated and verified.");
-                setTimeout(() => unlockModule(2), 700);
-              } else {
-                c.classList.add("wrong");
-                setError(panel, "No. You sign with your PRIVATE key.", "kqHint");
-              }
-            });
+          let dragK = "";
+          quiz.querySelectorAll("[data-k]").forEach((k) => {
+            k.addEventListener("dragstart", () => { dragK = k.dataset.k; });
+          });
+          const slot = document.getElementById("m2SignSlot");
+          slot.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            slot.classList.add("over");
+          });
+          slot.addEventListener("dragleave", () => slot.classList.remove("over"));
+          slot.addEventListener("drop", (e) => {
+            e.preventDefault();
+            slot.classList.remove("over");
+            if (!dragK) return;
+            if (dragK === "private") {
+              slot.classList.add("ok");
+              slot.textContent = "Private key accepted ✓";
+              const hint = document.getElementById("kqHint");
+              hint.textContent = "Correct! Private key creates signatures.";
+              hint.classList.add("success-note");
+            } else {
+              slot.classList.add("bad");
+              slot.textContent = "Public key cannot sign";
+              setError(panel, "Use PRIVATE key for signing.", "kqHint");
+            }
           });
 
         } catch {
@@ -1387,18 +2770,18 @@
     }
 
     function renderModule3(step) {
-      const header = stepHeader(3, "Module 3: Creating the Digital Signature", "See the flow, then produce a real signature using your own keys.");
+      const header = stepHeader(3, "Module 3: Creating the Digital Signature", "Alice seals her rental contract with her private key. Bob will verify it in Module 4.", "Alice seals her rental contract hash with her private key — creating her digital signature.");
       if (step === 0) {
         return `${header}
           <div class="step-screen step-fade centered-focus">
             <div class="flow-vertical" id="m3Flow">
-              <div class="flow-step" data-step="0">📄 Message</div><div class="flow-arrow"></div>
+              <div class="flow-step" data-step="0">📄 Document</div><div class="flow-arrow"></div>
               <div class="flow-step" data-step="1">[SHA-256 Hash Function]</div><div class="flow-arrow"></div>
               <div class="flow-step" data-step="2">🔢 Hash</div><div class="flow-arrow"></div>
               <div class="flow-step" data-step="3">[Encrypt with PRIVATE KEY]</div><div class="flow-arrow"></div>
               <div class="flow-step" data-step="4">✍️ Digital Signature</div>
             </div>
-            <button class="btn" id="nextM3">Got it →</button>
+            <button class="btn btn-secondary" id="nextM3">Got it →</button>
           </div>`;
       }
 
@@ -1407,14 +2790,40 @@
         <div class="step-screen step-fade">
           <div class="mini-card pulse-glow" id="m3Task">
             ${hasData ? `
-              <div class="read-card"><strong>Message from Module 1</strong><div style="margin-top:6px; font-size:1.06rem;">${escapeHtml(state.userMessage)}</div></div>
-              <div class="read-card"><strong>Hash from Module 1</strong>${detailsBlock("Show details", state.messageHash)}</div>
-              <h4 class="concept-text">Which key should we use to sign?</h4>
-              <div style="display:flex; gap:10px; margin:8px 0 10px; flex-wrap:wrap;">
-                <button class="btn btn-danger" id="usePublic">🔓 Use Public Key</button>
-                <button class="btn" id="usePrivate">🔑 Use Private Key</button>
+              ${dataFromModuleTag(1, `<strong>Document</strong><div style="margin-top:6px; font-size:1.06rem;">${escapeHtml(state.userMessage)}</div>`)}
+              ${dataFromModuleTag(1, `<strong>SHA-256 Hash</strong><code class="hash">${escapeHtml(state.messageHash)}</code>`)}
+              ${dataFromModuleTag(2, `<strong>Key Pair Ready</strong><div style="margin-top:6px;">Algorithm: ${escapeHtml(getSelectedAlgoLabel())} · ${escapeHtml(state.selectedKeySize)}${state.selectedAlgo === "ECDSA" ? "" : "-bit"}</div>`)}
+              <h4 class="concept-text">Drag a key into signing slot</h4>
+              <div class="ai-tip">🤖 Tip: Signature is created only with the private key.</div>
+              <div class="key-drag-row" style="margin-top:8px;">
+                <div class="key-token public" draggable="true" data-keytype="public">🔓 Public Key (verify only)</div>
+                <div class="key-token private" draggable="true" data-keytype="private">🔑 Private Key (sign)</div>
               </div>
+              <div id="signKeySlot" class="key-slot">Drop key here to continue signing...</div>
               <div id="signArea"></div>
+              <div class="mini-card" style="margin-top:10px;" id="m3Sandbox">
+                <h4>🧪 Free Experiment Lab</h4>
+                <p class="subtitle" style="margin-top:6px;">Change the document text or hash algorithm — see how the signature immediately becomes invalid.</p>
+                <div class="grid-2" style="margin-top:10px;">
+                  <div>
+                    <label for="practiceHashAlgo"><strong>Hash Algorithm</strong></label>
+                    <select id="practiceHashAlgo">
+                      <option value="SHA-256" ${state.practiceHashAlgo === "SHA-256" ? "selected" : ""}>SHA-256</option>
+                      <option value="SHA-384" ${state.practiceHashAlgo === "SHA-384" ? "selected" : ""}>SHA-384</option>
+                      <option value="SHA-512" ${state.practiceHashAlgo === "SHA-512" ? "selected" : ""}>SHA-512</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label><strong>Document for Experiment</strong></label>
+                    <textarea id="practiceMessage" placeholder="Enter document text to experiment..." style="min-height:100px;">${escapeHtml(state.practiceMessage || state.userMessage)}</textarea>
+                  </div>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+                  <button class="btn btn-primary" id="practiceSignBtn">Sign Experiment</button>
+                  <button class="btn btn-secondary" id="practiceVerifyBtn" ${state.practiceSignature ? "" : "disabled"}>Verify Current Signature</button>
+                </div>
+                <div id="practiceOut" style="margin-top:10px;"></div>
+              </div>
               <div id="m3Hint" class="hint"></div>
             ` : `<div class="warning">Missing prerequisites. Complete Module 1 and Module 2.</div>`}
           </div>
@@ -1431,15 +2840,68 @@
 
       const signArea = document.getElementById("signArea");
       const task = document.getElementById("m3Task");
+      const practiceOut = document.getElementById("practiceOut");
+      const practiceMessage = document.getElementById("practiceMessage");
+      const practiceHashAlgo = document.getElementById("practiceHashAlgo");
+      const practiceSignBtn = document.getElementById("practiceSignBtn");
+      const practiceVerifyBtn = document.getElementById("practiceVerifyBtn");
 
-      document.getElementById("usePublic").addEventListener("click", () => setError(task, "Wrong. Signing uses PRIVATE key.", "m3Hint"));
-      document.getElementById("usePrivate").addEventListener("click", () => {
-        document.getElementById("m3Hint").textContent = "Correct. Now run signing.";
-        document.getElementById("m3Hint").classList.add("success-note");
+      practiceMessage.addEventListener("input", () => {
+        state.practiceMessage = practiceMessage.value;
+      });
+      practiceHashAlgo.addEventListener("change", () => {
+        state.practiceHashAlgo = practiceHashAlgo.value;
+      });
+
+      practiceSignBtn.addEventListener("click", async () => {
+        const msg = practiceMessage.value.trim();
+        if (!msg) return setError(task, "Enter a message in Practice Sandbox.", "m3Hint");
+        practiceSignBtn.disabled = true;
+        practiceOut.innerHTML = `<div class="load"><span class="spinner"></span> Signing experiment...</div>`;
+        try {
+          state.practiceMessage = msg;
+          state.practiceHashAlgo = practiceHashAlgo.value;
+          const result = await signWithCurrentAlgo(msg, state.practiceHashAlgo);
+          state.practiceSignature = result.signature;
+          state.practiceSignatureB64 = result.signatureB64;
+          practiceOut.innerHTML = `
+            <div class="mini-card success-burst">
+              <div><strong>Signature Generated (${escapeHtml(getSelectedAlgoLabel())})</strong></div>
+              <div class="subtitle" style="margin-top:6px;">Hash setting: ${escapeHtml(state.practiceHashAlgo)}</div>
+              ${result.digestHex ? `<code class="hash">${escapeHtml(result.digestHex)}</code>` : `<div class="subtitle" style="margin-top:6px;">ECDSA signs message bytes with internal ${escapeHtml(state.practiceHashAlgo)} hashing.</div>`}
+              <code class="hash">${escapeHtml(result.signatureB64)}</code>
+            </div>`;
+          practiceVerifyBtn.disabled = false;
+        } catch {
+          setError(task, "Practice signing failed.", "m3Hint");
+        } finally {
+          practiceSignBtn.disabled = false;
+        }
+      });
+
+      practiceVerifyBtn.addEventListener("click", async () => {
+        if (!state.practiceSignature) return;
+        const msg = practiceMessage.value.trim();
+        if (!msg) return setError(task, "Enter a message for verification.", "m3Hint");
+        practiceVerifyBtn.disabled = true;
+        practiceOut.insertAdjacentHTML("beforeend", `<div class="load" id="practiceVerifyLoad"><span class="spinner"></span> Verifying experiment...</div>`);
+        try {
+          const ok = await verifyWithCurrentAlgo(msg, state.practiceSignature, practiceHashAlgo.value);
+          const load = document.getElementById("practiceVerifyLoad");
+          if (load) load.remove();
+          practiceOut.insertAdjacentHTML("beforeend", `<div class="mini-card" style="border-color:${ok ? "rgba(51,209,122,.6)" : "rgba(255,93,108,.6)"};"><strong>${ok ? "✅ VALID" : "❌ INVALID"}</strong><div class="subtitle" style="margin-top:6px;">Change message/hash and verify again to observe failures.</div></div>`);
+        } catch {
+          setError(task, "Practice verification failed.", "m3Hint");
+        } finally {
+          practiceVerifyBtn.disabled = false;
+        }
+      });
+
+      function showSigningPanel() {
         signArea.innerHTML = `
           <div class="mini-card">
-            <h4>Apply private key to hash</h4>
-            <div style="display:flex; align-items:center; gap:10px; margin-top:8px;"><button class="btn" id="runSign">Run Signing</button><div id="signLoad"></div></div>
+            <h4>Flow: Hash -> Private Key -> Signature -> Attach to Document</h4>
+            <div style="display:flex; align-items:center; gap:10px; margin-top:8px;"><button class="btn btn-primary" id="runSign">Run Signing</button><div id="signLoad"></div></div>
             <div id="signOut" style="margin-top:10px;"></div>
           </div>`;
 
@@ -1453,20 +2915,25 @@
           try {
             await new Promise((r) => setTimeout(r, 900));
             const hashBuffer = state.messageHashBuffer || hexToArrayBuffer(state.messageHash);
-            const signature = await crypto.subtle.sign({ name: "RSA-PSS", saltLength: 32 }, state.keyPair.privateKey, hashBuffer);
+            const signature = await crypto.subtle.sign(getSignAlgorithm(), state.keyPair.privateKey, hashBuffer);
             state.signature = signature;
             state.signatureB64 = arrayBufferToBase64(signature);
 
             out.innerHTML = `
               <div class="signature-card success-burst">
                 <h4>✍️ Your Digital Signature</h4>
-                ${detailsBlock("Show details", state.signatureB64)}
-                <p class="subtitle" style="margin-top:10px;">Unique to this message signed with your private key.</p>
+                <code class="hash">${escapeHtml(state.signatureB64)}</code>
+                <p class="subtitle" style="margin-top:10px;">Unique to this document signed with your private key.</p>
+              </div>
+              <div class="file-stamp">
+                <div class="stamp-icon">📄</div>
+                <div>Hash locked with PRIVATE KEY</div>
+                <div class="stamp-badge">DIGITAL SEAL</div>
               </div>
               <div class="package sealed" id="signedPkg" style="margin-top:10px;">
-                <div>📄 Original Message: <em>${escapeHtml(state.userMessage)}</em></div>
+                <div>📄 Original Document: <em>${escapeHtml(state.userMessage)}</em></div>
                 <div>✍️ Signature attached</div>
-                <div>🔓 Public key attached for verification</div>
+                <div>🔓 Public key attached for verification (${escapeHtml(getSelectedAlgoLabel())})</div>
               </div>
               <button class="btn btn-secondary" id="sendBob" style="margin-top:10px;">Seal & Send to Bob</button>
               <div id="sendMsg" class="subtitle" style="margin-top:8px;"></div>`;
@@ -1485,6 +2952,36 @@
             load.innerHTML = "";
           }
         });
+      }
+
+      const keyTokens = document.querySelectorAll(".key-token");
+      const keySlot = document.getElementById("signKeySlot");
+      let draggedKey = "";
+      keyTokens.forEach((k) => {
+        k.addEventListener("dragstart", () => { draggedKey = k.dataset.keytype; });
+      });
+      keySlot.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        keySlot.classList.add("over");
+      });
+      keySlot.addEventListener("dragleave", () => keySlot.classList.remove("over"));
+      keySlot.addEventListener("drop", (e) => {
+        e.preventDefault();
+        keySlot.classList.remove("over");
+        if (!draggedKey) return;
+        if (draggedKey === "private") {
+          keySlot.classList.remove("bad");
+          keySlot.classList.add("ok");
+          keySlot.textContent = "Private key accepted ✓ Ready to sign";
+          document.getElementById("m3Hint").textContent = "Correct key selected. Start signing flow.";
+          document.getElementById("m3Hint").classList.add("success-note");
+          showSigningPanel();
+        } else {
+          keySlot.classList.remove("ok");
+          keySlot.classList.add("bad");
+          keySlot.textContent = "Public key cannot sign documents";
+          setError(task, "Wrong key. Signing requires PRIVATE key.", "m3Hint");
+        }
       });
     }
 
@@ -1503,16 +3000,48 @@
     }
 
     function renderModule4(step) {
-      const header = stepHeader(4, "Module 4: Verifying the Signature", "Verify normal traffic first, then test the tampering attack.");
+      const header = stepHeader(4, "Module 4: Verifying the Signature", "Bob uses Alice's public key to verify the rental contract wasn't tampered with by Eve.", "Bob received Alice's contract. He now verifies her signature using her public key.");
       if (step === 0) {
         return `${header}
           <div class="step-screen step-fade centered-focus">
-            <div class="verify-layout" style="width:min(980px,100%);">
-              <div class="mini-card concept-text">✍️ Signature → [Public key verify] → Hash A</div>
-              <div class="mini-card concept-text">📄 Message → [SHA-256] → Hash B</div>
+            <div class="mini-card" style="border-color:rgba(108,99,255,0.4); background:rgba(108,99,255,0.07); max-width:820px; margin:0 auto;">
+              <strong style="color:#c7c2ff; font-family:'Orbitron',sans-serif; font-size:0.85rem;">🔍 HOW BOB VERIFIES ALICE'S SIGNATURE</strong>
+              <div style="display:grid; grid-template-columns:1fr auto 1fr auto 1fr; align-items:center; gap:10px; margin-top:16px; font-size:0.9rem;">
+                <div style="border:1px solid rgba(108,99,255,0.5); border-radius:10px; padding:12px; text-align:center; background:rgba(108,99,255,0.08);">
+                  <div style="font-size:1.4rem;">✍️</div>
+                  <div style="font-weight:700; margin-top:4px;">Signature</div>
+                  <div style="color:var(--muted); font-size:0.78rem;">received from Alice</div>
+                </div>
+                <div style="text-align:center;">
+                  <div style="color:var(--cyan); font-size:0.78rem;">+ 🔓 Alice's</div>
+                  <div style="color:var(--cyan); font-size:0.78rem;">Public Key</div>
+                  <div style="color:var(--cyan); font-size:1.2rem;">→</div>
+                  <div style="color:var(--muted); font-size:0.72rem; font-style:italic;">decrypt</div>
+                </div>
+                <div style="border:1px solid rgba(0,212,255,0.5); border-radius:10px; padding:12px; text-align:center; background:rgba(0,212,255,0.07);">
+                  <div style="font-size:1.4rem;">#️⃣</div>
+                  <div style="font-weight:700; margin-top:4px; color:var(--cyan);">Hash A</div>
+                  <div style="color:var(--muted); font-size:0.78rem;">from signature</div>
+                </div>
+                <div style="text-align:center; font-size:1.5rem; color:var(--yellow);">⟷</div>
+                <div style="border:1px solid rgba(51,209,122,0.5); border-radius:10px; padding:12px; text-align:center; background:rgba(51,209,122,0.07);">
+                  <div style="font-size:1.4rem;">#️⃣</div>
+                  <div style="font-weight:700; margin-top:4px; color:var(--green);">Hash B</div>
+                  <div style="color:var(--muted); font-size:0.78rem;">SHA-256(document)</div>
+                </div>
+              </div>
+              <div style="margin-top:14px; display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:0.88rem;">
+                <div style="border:1px solid rgba(51,209,122,0.4); border-radius:8px; padding:10px; background:rgba(51,209,122,0.07);">
+                  <strong style="color:var(--green);">✅ Hash A = Hash B</strong><br>
+                  <span style="color:var(--muted);">Signature valid. Document is authentic and unmodified.</span>
+                </div>
+                <div style="border:1px solid rgba(255,93,108,0.4); border-radius:8px; padding:10px; background:rgba(255,93,108,0.07);">
+                  <strong style="color:var(--red);">❌ Hash A ≠ Hash B</strong><br>
+                  <span style="color:var(--muted);">Signature invalid. Eve tampered with the document.</span>
+                </div>
+              </div>
             </div>
-            <div class="concept-text">If Hash A equals Hash B, signature is valid.</div>
-            <button class="btn" id="nextM4">Got it →</button>
+            <button class="btn btn-secondary" id="nextM4">Verify Alice's contract →</button>
           </div>`;
       }
 
@@ -1526,14 +3055,16 @@
             <div class="mini-card pulse-glow" id="m4Task1">
               <h3 class="concept-text">Part 1: Verify Signature (Bob)</h3>
               <div class="package sealed" style="margin:8px 0 10px;">
-                <div>📄 Message received: ${escapeHtml(state.userMessage)}</div>
+                <div>📄 Document received: ${escapeHtml(state.userMessage)}</div>
                 <div>✍️ Signature attached</div>
                 <div>🔓 Alice's public key attached</div>
               </div>
+              ${dataFromModuleTag(2, `<strong>Verification Key</strong><code class="hash">${escapeHtml((state.keyPair.publicKeyB64 || "").slice(0, 96))}...</code><div style="margin-top:6px;">Only PUBLIC key is used here.</div>`)}
+              ${dataFromModuleTag(3, `<strong>Signature</strong><code class="hash">${escapeHtml(state.signatureB64)}</code>`)}
               <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
-                <button class="btn" id="vStep1">Step 1: Verify signature with public key</button>
-                <button class="btn" id="vStep2" disabled>Step 2: Hash received message</button>
-                <button class="btn" id="vStep3" disabled>Step 3: Compare hashes</button>
+                <button class="btn btn-primary" id="vStep1">Verify</button>
+                <button class="btn btn-secondary" id="vStep2" disabled>Step 2: Hash received document</button>
+                <button class="btn btn-secondary" id="vStep3" disabled>Step 3: Compare hashes</button>
               </div>
               <div id="verifyArea" class="stack"></div>
               <div id="m4Hint1" class="hint"></div>
@@ -1542,17 +3073,24 @@
           </div>`;
       }
 
-      const tampered = tamperMessage(state.userMessage);
       return `${header}
         <div class="step-screen step-fade">
           <div class="mini-card pulse-glow" id="m4Task2">
-            <h3 class="concept-text">Part 2: Attack Simulation</h3>
+            <h3 class="concept-text">Part 2: Man-in-the-Middle Attack</h3>
+            <div class="ai-tip">🤖 Tip: Verification must use PUBLIC key and recomputed hash from received document.</div>
             <div class="attack">
-              <div><strong>Scenario:</strong> Eve changed one word.</div>
-              <div style="margin-top:8px;">Tampered message: ${highlightTampered(state.userMessage, tampered)}</div>
-              <div class="subtitle" style="margin-top:8px;">The signature is unchanged. Will verification fail?</div>
+              <div><strong>Scenario:</strong> Alice signs: <code>Transfer $100</code></div>
+              <div class="subtitle" style="margin-top:8px;">Try normal verification first, then tamper to <code>Transfer $1000</code>.</div>
             </div>
-            <button class="btn btn-danger" id="verifyTampered" style="margin-top:10px;">🔍 Verify tampered message</button>
+            <div style="margin-top:10px;">
+              <label><strong>Received Document</strong></label>
+              <textarea id="mitmDoc" style="min-height:90px;">Transfer $100</textarea>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;">
+              <button class="btn btn-secondary" id="verifyOriginalDoc">✅ Verify original</button>
+              <button class="btn btn-danger btn-primary" id="tamperDocBtn">🚨 Tamper Document</button>
+              <button class="btn btn-primary" id="verifyTampered" style="display:none;">🔍 Verify tampered document</button>
+            </div>
             <div id="attackOut" style="margin-top:10px;"></div>
             <div id="m4Hint2" class="hint"></div>
           </div>
@@ -1577,13 +3115,13 @@
         document.getElementById("vStep1").addEventListener("click", async () => {
           const btn = document.getElementById("vStep1");
           btn.disabled = true;
-          verifyArea.innerHTML = `<div class="load"><span class="spinner"></span> Verifying signature with Alice's public key...</div>`;
+          verifyArea.innerHTML = `<div class="load"><span class="spinner"></span> Verifying signature with Alice's public key (${escapeHtml(getSelectedAlgoLabel())})...</div>`;
           try {
             const messageHashBuffer = state.messageHashBuffer || hexToArrayBuffer(state.messageHash);
-            const ok = await crypto.subtle.verify({ name: "RSA-PSS", saltLength: 32 }, state.keyPair.publicKey, state.signature, messageHashBuffer);
+            const ok = await crypto.subtle.verify(getVerifyAlgorithm(), state.keyPair.publicKey, state.signature, messageHashBuffer);
             state.verifyResult = ok;
             hashA = state.messageHash;
-            verifyArea.innerHTML = `<div class="mini-card success-burst"><strong>Hash A from signature path</strong>${detailsBlock("Show details", hashA)}</div>`;
+            verifyArea.innerHTML = `<div class="mini-card success-burst"><strong>Hash A from signature path</strong><code class="hash">${escapeHtml(hashA)}</code></div>`;
             step1Done = true;
             document.getElementById("vStep2").disabled = false;
           } catch {
@@ -1601,7 +3139,7 @@
             hashB = h.hex;
             const ld = document.getElementById("v2Load");
             if (ld) ld.remove();
-            verifyArea.insertAdjacentHTML("beforeend", `<div class="mini-card success-burst"><strong>Hash B from message path</strong>${detailsBlock("Show details", hashB)}</div>`);
+            verifyArea.insertAdjacentHTML("beforeend", `<div class="mini-card success-burst"><strong>Hash B from message path</strong><code class="hash">${escapeHtml(hashB)}</code></div>`);
             step2Done = true;
             document.getElementById("vStep3").disabled = false;
           } catch {
@@ -1613,6 +3151,7 @@
           if (!(step1Done && step2Done)) return;
           const cmp = hashDiffHTML(hashA, hashB);
           const allGood = cmp.diff === 0 && state.verifyResult;
+          const matchCount = 64 - cmp.diff;
           const dots = [];
           for (let i = 0; i < 64; i += 1) {
             const good = hashA[i] === hashB[i];
@@ -1621,10 +3160,11 @@
           verifyArea.insertAdjacentHTML("beforeend", `
             <div class="mini-card ${allGood ? "success-burst" : "shake"}">
               <div class="hash-compare">
-                <div><strong>Hash A</strong><details class="reveal"><summary>Show details ▾</summary><code class="hash hash-diff">${cmp.htmlA}</code></details></div>
-                <div><strong>Hash B</strong><details class="reveal"><summary>Show details ▾</summary><code class="hash hash-diff">${cmp.htmlB}</code></details></div>
+                <div><strong>Hash A</strong><code class="hash hash-diff">${cmp.htmlA}</code></div>
+                <div><strong>Hash B</strong><code class="hash hash-diff">${cmp.htmlB}</code></div>
               </div>
               <div class="char-compare">${dots.join("")}</div>
+              <div class="match-counter">${matchCount} / 64 characters match ${matchCount === 64 ? "✅" : "❌"}</div>
               <div style="margin-top:8px; font-weight:800; color:${allGood ? "#33d17a" : "#ff5d6c"};">${allGood ? "✅ SIGNATURE VALID — Message is authentic!" : "❌ SIGNATURE INVALID"}</div>
             </div>`);
           document.getElementById("nextM4").style.display = "inline-flex";
@@ -1635,24 +3175,59 @@
       }
 
       const task2 = document.getElementById("m4Task2");
-      const tampered = tamperMessage(state.userMessage);
-      document.getElementById("verifyTampered").addEventListener("click", async () => {
-        const out = document.getElementById("attackOut");
-        out.innerHTML = `<div class="load"><span class="spinner"></span> Verifying tampered message...</div>`;
+      const docInput = document.getElementById("mitmDoc");
+      const out = document.getElementById("attackOut");
+      const verifyTamperedBtn = document.getElementById("verifyTampered");
+      const baseDoc = "Transfer $100";
+      let attackSignature = null;
+      let attackOriginalHash = "";
+
+      async function ensureAttackSignature() {
+        if (attackSignature) return;
+        const signed = await signWithCurrentAlgo(baseDoc, "SHA-256");
+        attackSignature = signed.signature;
+        const h = await sha256(baseDoc);
+        attackOriginalHash = h.hex;
+      }
+
+      document.getElementById("verifyOriginalDoc").addEventListener("click", async () => {
+        out.innerHTML = `<div class="load"><span class="spinner"></span> Verifying document with PUBLIC key...</div>`;
         try {
+          await ensureAttackSignature();
+          const msg = docInput.value;
+          const hash = await sha256(msg);
+          const ok = await verifyWithCurrentAlgo(msg, attackSignature, "SHA-256");
+          out.innerHTML = `<div class="mini-card" style="border-color:${ok ? "rgba(51,209,122,.6)" : "rgba(255,93,108,.6)"};"><strong>${ok ? "✅ VALID with PUBLIC key" : "❌ INVALID with PUBLIC key"}</strong><code class="hash">${escapeHtml(hash.hex)}</code><div class="subtitle" style="margin-top:6px;">Reference signed text: ${escapeHtml(baseDoc)}</div></div>`;
+        } catch {
+          setError(task2, "Could not verify original document.", "m4Hint2");
+        }
+      });
+
+      document.getElementById("tamperDocBtn").addEventListener("click", () => {
+        docInput.value = "Transfer $1000";
+        verifyTamperedBtn.style.display = "inline-flex";
+      });
+
+      verifyTamperedBtn.addEventListener("click", async () => {
+        out.innerHTML = `<div class="load"><span class="spinner"></span> Verifying tampered document...</div>`;
+        try {
+          await ensureAttackSignature();
+          const tampered = docInput.value;
           const tamperedHash = await sha256(tampered);
-          const ok = await crypto.subtle.verify({ name: "RSA-PSS", saltLength: 32 }, state.keyPair.publicKey, state.signature, tamperedHash.buffer);
-          const cmp = hashDiffHTML(state.messageHash, tamperedHash.hex);
+          const ok = await verifyWithCurrentAlgo(tampered, attackSignature, "SHA-256");
+          const cmp = hashDiffHTML(attackOriginalHash, tamperedHash.hex);
+          const matchCount = 64 - cmp.diff;
           const invalid = !ok;
           out.innerHTML = `
-            <div class="mini-card ${invalid ? "shake" : ""}" style="border-color:${invalid ? "rgba(255,93,108,.6)" : "rgba(51,209,122,.6)"};">
-              <div class="hash-compare"><div><strong>Original Hash</strong><details class="reveal"><summary>Show details ▾</summary><code class="hash hash-diff">${cmp.htmlA}</code></details></div><div><strong>Tampered Hash</strong><details class="reveal"><summary>Show details ▾</summary><code class="hash hash-diff">${cmp.htmlB}</code></details></div></div>
-              <div style="margin-top:8px; font-weight:800; color:${invalid ? "#ff5d6c" : "#33d17a"};">${invalid ? "❌ SIGNATURE INVALID — Eve's tampering was detected!" : "✅ Signature still valid"}</div>
-            </div>
-            <div class="final-card" style="margin-top:10px;">Any message change invalidates the signature, which is why signatures guarantee integrity.</div>`;
+            <div class="mini-card ${invalid ? "shake" : ""}" style="border-color:${invalid ? "rgba(255,93,108,.8)" : "rgba(51,209,122,.6)"};">
+              <div class="hash-compare"><div><strong>Original Hash</strong><code class="hash hash-diff">${cmp.htmlA}</code></div><div><strong>Tampered Hash</strong><code class="hash hash-diff">${cmp.htmlB}</code></div></div>
+              <div class="match-counter">${matchCount} / 64 characters match ${matchCount === 64 ? "✅" : "❌"}</div>
+              <div style="margin-top:8px; font-weight:800; color:${invalid ? "#ff5d6c" : "#33d17a"};">${invalid ? "❌ SIGNATURE INVALID — Tampering detected!" : "✅ Signature still valid"}</div>
+            </div>`;
           if (invalid) {
+            showMitmAlert("Hashes do not match after document substitution.");
             setSuccess(task2, "m4Hint2", "Tampering detected. Module 5 unlocked.");
-            setTimeout(() => unlockModule(4), 1000);
+            if (!state.unlockedModules.includes(5)) setTimeout(() => unlockModule(4), 1000);
           }
         } catch {
           setError(task2, "Attack simulation failed.", "m4Hint2");
@@ -1661,7 +3236,7 @@
     }
 
     function renderModule5(step) {
-      const header = stepHeader(5, "Module 5: Final Quiz & Summary", "Assemble the protocol, answer scenario questions, and finish the course.");
+      const header = stepHeader(5, "Module 5: Final Quiz & Summary", "Assemble the protocol, answer scenario questions, then handle a real-world tampering case.", "Alice's contract is signed and verified. Now test your full understanding of the process.");
       if (step === 0) {
         return `${header}
           <div class="step-screen step-fade">
@@ -1689,35 +3264,112 @@
                 </div>
               </div>
               <div id="flowHint" class="hint"></div>
-              <button class="btn" id="checkFlow">Check Flow</button>
+              <button class="btn btn-primary" id="checkFlow">Check Flow</button>
             </div>
           </div>`;
       }
 
-      return `${header}
-        <div class="step-screen step-fade">
-          <div class="mini-card" id="m5Quiz">
-            <h3 class="concept-text">Part 2: Scenario Quiz</h3>
-            <div class="stack" style="margin-top:8px;">
-              <div class="quiz-q" data-q="q1" data-answer="private">
-                <strong>Q1: Alice wants to sign a contract. She should use her ___</strong>
-                <div class="opt" data-v="public">Public Key</div><div class="opt" data-v="private">Private Key</div><div class="opt" data-v="bobpub">Bob's Public Key</div>
-                <div class="hint" id="q1Hint"></div>
+      if (step === 1) {
+        return `${header}
+          <div class="step-screen step-fade">
+            <div class="mini-card" id="m5Quiz">
+              <h3 class="concept-text">Part 2: Scenario Quiz</h3>
+              <div class="stack" style="margin-top:8px;">
+                <div class="quiz-q" data-q="q1" data-answer="private">
+                  <strong>Q1: Alice wants to sign a contract. She should use her ___</strong>
+                  <div class="opt" data-v="public">Public Key</div><div class="opt" data-v="private">Private Key</div><div class="opt" data-v="bobpub">Bob's Public Key</div>
+                  <div class="hint" id="q1Hint"></div>
+                </div>
+                <div class="quiz-q" data-q="q2" data-answer="alicepub">
+                  <strong>Q2: Bob verifies a signed message using ___</strong>
+                  <div class="opt" data-v="bobpriv">His own private key</div><div class="opt" data-v="alicepriv">Alice's private key</div><div class="opt" data-v="alicepub">Alice's public key</div>
+                  <div class="hint" id="q2Hint"></div>
+                </div>
+                <div class="quiz-q" data-q="q3" data-answer="tampered">
+                  <strong>Q3: Hash mismatch means ___</strong>
+                  <div class="opt" data-v="authentic">The message is authentic</div><div class="opt" data-v="tampered">The message was tampered with</div><div class="opt" data-v="wrongkey">The key is wrong</div>
+                  <div class="hint" id="q3Hint"></div>
+                </div>
               </div>
-              <div class="quiz-q" data-q="q2" data-answer="alicepub">
-                <strong>Q2: Bob verifies a signed message using ___</strong>
-                <div class="opt" data-v="bobpriv">His own private key</div><div class="opt" data-v="alicepriv">Alice's private key</div><div class="opt" data-v="alicepub">Alice's public key</div>
-                <div class="hint" id="q2Hint"></div>
+              <div id="quizHint" class="hint"></div>
+            </div>
+          </div>`;
+      }
+
+      if (step === 2) {
+        return `${header}
+          <div class="step-screen step-fade">
+            <div class="mini-card" id="m5AttackLab">
+              <h3 class="concept-text">Part 3: Real World Attack — You Decide</h3>
+              <p class="subtitle" style="margin-top:6px;">Try verification as-is, then tamper with the message and verify again.</p>
+              <div class="grid-3" style="margin-top:10px;">
+                <div class="attack-lab-card">
+                  <strong>Card 1: Message</strong>
+                  <textarea id="attackMsgInput" style="margin-top:8px; min-height:120px;">${escapeHtml(state.userMessage)}</textarea>
+                </div>
+                <div class="attack-lab-card">
+                  <strong>Card 2: Signature</strong>
+                  <code class="hash">${escapeHtml((state.signatureB64 || "").slice(0, 84))}...</code>
+                </div>
+                <div class="attack-lab-card">
+                  <strong>Card 3: Public Key</strong>
+                  <code class="hash">${escapeHtml((state.keyPair.publicKeyB64 || "").slice(0, 84))}...</code>
+                </div>
               </div>
-              <div class="quiz-q" data-q="q3" data-answer="tampered">
-                <strong>Q3: Hash mismatch means ___</strong>
-                <div class="opt" data-v="authentic">The message is authentic</div><div class="opt" data-v="tampered">The message was tampered with</div><div class="opt" data-v="wrongkey">The key is wrong</div>
-                <div class="hint" id="q3Hint"></div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+                <button class="btn btn-primary" id="verifyAsIs">✅ Verify as-is</button>
+                <button class="btn btn-secondary" id="tamperVerify">✏️ Tamper with message then verify</button>
+              </div>
+              <div id="attackVerifyOut" style="margin-top:10px;"></div>
+              <div id="attackQuestion" style="${(state.module5AttackSeen.asIs && state.module5AttackSeen.tampered) ? "" : "display:none;"} margin-top:10px;">
+                <div class="quiz-q">
+                  <strong>Was the second verification result expected? Why?</strong>
+                  <textarea id="attackAnswer" placeholder="Explain why verification changed (or did not change)."></textarea>
+                  <button class="btn btn-primary" id="submitAttackAnswer">Submit Answer</button>
+                  <div id="attackAnswerOut"></div>
+                </div>
               </div>
             </div>
-            <div id="quizHint" class="hint"></div>
+            <div id="summaryArea" style="margin-top:12px;"></div>
+          </div>`;
+      }
+
+      const hasSig = !!(state.signature && state.keyPair.publicKey && state.userMessage);
+      return `${header}
+        <div class="step-screen step-fade">
+          <div class="mini-card pulse-glow" id="freeLabCard">
+            <h3 class="concept-text">🔬 Free Investigation Lab</h3>
+            <p class="subtitle" style="margin-top:6px;">No instructions. No hints. You have Alice's signed document, her public key, and her signature. Investigate freely.</p>
+
+            <div class="grid-2" style="margin-top:14px;">
+              <div>
+                <label><strong>Document to verify</strong></label>
+                <textarea id="freeDoc" style="min-height:120px; font-family:'JetBrains Mono',monospace; font-size:0.85rem;">${hasSig ? escapeHtml(state.userMessage) : "RENTAL CONTRACT\nTenant: Alice Johnson\nMonthly Rent: $500"}</textarea>
+              </div>
+              <div>
+                <label><strong>What do you want to test?</strong></label>
+                <div class="radio-stack" id="freeLabOptions">
+                  <label class="radio-line"><input type="radio" name="freeAction" value="verify"> Verify as-is (should pass)</label>
+                  <label class="radio-line"><input type="radio" name="freeAction" value="tamper"> Change document then verify (Eve's attack)</label>
+                  <label class="radio-line"><input type="radio" name="freeAction" value="wrongkey"> Verify with a different key pair</label>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+              <button class="btn btn-primary" id="freeRunBtn">▶ Run Experiment</button>
+              <button class="btn btn-secondary" id="freeResetBtn">↺ Reset Document</button>
+            </div>
+
+            <div id="freeLabOut" style="margin-top:14px;"></div>
+
+            <div style="margin-top:16px; border-top:1px solid var(--border); padding-top:12px;">
+              <label><strong>Your conclusion</strong> — what did you observe?</label>
+              <textarea id="freeConclusion" placeholder="Write what you discovered about digital signatures..." style="min-height:80px; margin-top:8px;"></textarea>
+              <button class="btn btn-primary" id="freeSubmitBtn" style="margin-top:10px;">Submit &amp; Complete Course 🎓</button>
+            </div>
+            <div id="freeLabHint" class="hint"></div>
           </div>
-          <div id="summaryArea"></div>
         </div>`;
     }
 
@@ -1726,7 +3378,82 @@
         bindDragFlow();
         return;
       }
-      bindScenarioQuiz();
+      if (step === 1) {
+        bindScenarioQuiz();
+        return;
+      }
+      if (step === 2) {
+        bindAttackChallenge();
+        return;
+      }
+      bindFreeInvestigationLab();
+    }
+
+    function bindFreeInvestigationLab() {
+      const freeDoc = document.getElementById("freeDoc");
+      const freeOut = document.getElementById("freeLabOut");
+
+      document.getElementById("freeResetBtn").addEventListener("click", () => {
+        freeDoc.value = state.userMessage || "RENTAL CONTRACT\nTenant: Alice Johnson\nMonthly Rent: $500";
+        freeOut.innerHTML = "";
+      });
+
+      document.getElementById("freeRunBtn").addEventListener("click", async () => {
+        const action = document.querySelector("input[name='freeAction']:checked");
+        if (!action) return setError(document.getElementById("freeLabCard"), "Select an experiment first.", "freeLabHint");
+        if (!state.signature || !state.keyPair.publicKey) {
+          freeOut.innerHTML = `<div class="warning">No signature found. Complete Modules 1-3 first to generate a real signature.</div>`;
+          return;
+        }
+
+        freeOut.innerHTML = `<div class="load"><span class="spinner"></span> Running experiment...</div>`;
+        try {
+          let docToVerify = freeDoc.value;
+          let keyToUse = state.keyPair.publicKey;
+          let label = "";
+
+          if (action.value === "tamper") {
+            label = `<div class="ai-tip" style="margin-bottom:8px;">🕵️ Eve modified the document before sending to Bob.</div>`;
+          } else if (action.value === "wrongkey") {
+            const tempKp = await crypto.subtle.generateKey(
+              state.selectedAlgo === "ECDSA"
+                ? { name: "ECDSA", namedCurve: state.selectedKeySize || "P-256" }
+                : { name: state.selectedAlgo || "RSA-PSS", modulusLength: 2048, publicExponent: new Uint8Array([1,0,1]), hash: "SHA-256" },
+              true, ["sign", "verify"]
+            );
+            keyToUse = tempKp.publicKey;
+            label = `<div class="ai-tip" style="margin-bottom:8px;">🔑 Using a completely different public key — not Alice's.</div>`;
+          }
+
+          const ok = await verifyWithCurrentAlgo(docToVerify, state.signature, "SHA-256", keyToUse);
+          const color = ok ? "rgba(51,209,122,.6)" : "rgba(255,93,108,.6)";
+          const icon = ok ? "✅" : "❌";
+          const msg = ok
+            ? "SIGNATURE VALID — document is authentic and unmodified."
+            : "SIGNATURE INVALID — the signature does not match this document/key combination.";
+
+          freeOut.innerHTML = `${label}
+            <div class="mini-card ${ok ? "success-burst" : "shake"}" style="border-color:${color};">
+              <div style="font-size:1.2rem; font-weight:800; color:${ok ? "var(--green)" : "var(--red)"};">${icon} ${msg}</div>
+              <div class="subtitle" style="margin-top:8px;">Action: ${escapeHtml(action.value)} · Algorithm: ${escapeHtml(getSelectedAlgoLabel())}</div>
+            </div>`;
+        } catch(e) {
+          freeOut.innerHTML = `<div class="warning">Experiment failed: ${escapeHtml(e.message)}</div>`;
+        }
+      });
+
+      document.getElementById("freeSubmitBtn").addEventListener("click", () => {
+        const conclusion = document.getElementById("freeConclusion").value.trim();
+        if (!conclusion) return setError(document.getElementById("freeLabCard"), "Write your conclusion first.", "freeLabHint");
+        freeOut.insertAdjacentHTML("beforeend", `
+          <div class="final-card shine" style="margin-top:14px;">
+            <div style="font-size:1.5rem; margin-bottom:8px;">🎓 Course Complete</div>
+            <div>Your conclusion: <em>"${escapeHtml(conclusion)}"</em></div>
+            <div class="subtitle" style="margin-top:8px;">You have successfully learned digital signatures by doing — not just reading.</div>
+          </div>`);
+        showConfetti();
+        if (!state.unlockedModules.includes(6)) setTimeout(() => unlockModule(5), 600);
+      });
     }
 
     function bindDragFlow() {
@@ -1820,6 +3547,55 @@
       });
     }
 
+    function bindAttackChallenge() {
+      const task = document.getElementById("m5AttackLab");
+      const msgInput = document.getElementById("attackMsgInput");
+      const out = document.getElementById("attackVerifyOut");
+      const qWrap = document.getElementById("attackQuestion");
+
+      async function verifyCurrent(label, changed) {
+        const currentMessage = msgInput.value;
+        if (!currentMessage.trim()) return setError(task, "Message cannot be empty.", null);
+        out.innerHTML = `<div class="load"><span class="spinner"></span> ${escapeHtml(label)}...</div>`;
+        try {
+          const h = await sha256(currentMessage);
+          const ok = await crypto.subtle.verify(getVerifyAlgorithm(), state.keyPair.publicKey, state.signature, h.buffer);
+          out.innerHTML = `
+            <div class="mini-card" style="border-color:${ok ? "rgba(51,209,122,.6)" : "rgba(255,93,108,.6)"};">
+              <div><strong>Verification result:</strong> ${ok ? "✅ VALID" : "❌ INVALID"}</div>
+              <code class="hash">${escapeHtml(h.hex)}</code>
+              <div class="subtitle" style="margin-top:8px;">${ok ? "Signature still matches this exact message." : "Signature no longer matches this message."}</div>
+            </div>`;
+          if (changed) state.module5AttackSeen.tampered = true;
+          else state.module5AttackSeen.asIs = true;
+          if (state.module5AttackSeen.asIs && state.module5AttackSeen.tampered) qWrap.style.display = "block";
+        } catch {
+          setError(task, "Verification failed in attack challenge.", null);
+        }
+      }
+
+      document.getElementById("verifyAsIs").addEventListener("click", () => verifyCurrent("Verifying as-is", false));
+      document.getElementById("tamperVerify").addEventListener("click", () => {
+        if (msgInput.value === state.userMessage) msgInput.value = `${state.userMessage} [tampered]`;
+        verifyCurrent("Verifying after tamper", true);
+      });
+
+      const submitBtn = document.getElementById("submitAttackAnswer");
+      if (!submitBtn) return;
+      submitBtn.addEventListener("click", () => {
+        const answer = document.getElementById("attackAnswer").value.trim();
+        if (!answer) return setError(task, "Write a short explanation before submitting.", null);
+        const answerOut = document.getElementById("attackAnswerOut");
+        answerOut.innerHTML = `
+          <div class="final-card success-burst" style="margin-top:8px;">
+            <strong>Model Answer</strong>
+            <div style="margin-top:6px;">Yes, the second result is expected. A digital signature binds to an exact message hash. If the message changes, SHA-256 changes, so verification with the old signature fails.</div>
+          </div>`;
+        showConfetti();
+        setTimeout(() => nextStep(5), 900);
+      });
+    }
+
     function renderFinalSummary() {
       const area = document.getElementById("summaryArea");
       area.innerHTML = `
@@ -1886,8 +3662,8 @@
       if (score === 3) {
         hint.textContent = "All correct. Outstanding.";
         hint.classList.add("success-note");
-        showConfetti();
-        renderFinalSummary();
+        state.module5ScenarioDone = true;
+        setTimeout(() => nextStep(5), 600);
       } else {
         hint.textContent = `Score: ${score}/3. Correct the wrong answers.`;
         hint.classList.remove("success-note");
@@ -1897,6 +3673,11 @@
     function render() {
       renderTopBar();
       const root = document.getElementById("moduleRoot");
+      if (state.showProcessMap) {
+        root.innerHTML = renderProcessMap();
+        bindProcessMap();
+        return;
+      }
       const step = state.moduleSteps[state.currentModule] || 0;
       if (state.currentModule === 0) root.innerHTML = renderModule0(step);
       if (state.currentModule === 1) root.innerHTML = renderModule1(step);
@@ -1911,17 +3692,84 @@
       if (state.currentModule === 3) bindModule3(step);
       if (state.currentModule === 4) bindModule4(step);
       if (state.currentModule === 5) bindModule5(step);
+      const backBtn = document.getElementById("backToMapInline");
+      if (backBtn) {
+        backBtn.addEventListener("click", () => {
+          state.showProcessMap = true;
+          render();
+        });
+      }
     }
+
+    let splashAnim = 0;
+    function startSplashRain() {
+      const canvas = document.getElementById("splashRain");
+      const ctx = canvas.getContext("2d");
+      const chars = "0123456789ABCDEF";
+      let drops = [];
+
+      function resizeRain() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const count = Math.max(80, Math.floor(canvas.width / 14));
+        drops = Array.from({ length: count }, () => ({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          speed: 1.6 + Math.random() * 3.6,
+          size: 12 + Math.random() * 6,
+          c: Math.random() > 0.5 ? "rgba(0,212,255,0.75)" : "rgba(51,209,122,0.72)"
+        }));
+      }
+
+      function draw() {
+        ctx.fillStyle = "rgba(10,10,15,0.22)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        drops.forEach((d) => {
+          d.y += d.speed;
+          if (d.y > canvas.height + 20) {
+            d.y = -20;
+            d.x = Math.random() * canvas.width;
+          }
+          ctx.fillStyle = d.c;
+          ctx.font = `${d.size}px JetBrains Mono`;
+          ctx.fillText(chars[Math.floor(Math.random() * chars.length)], d.x, d.y);
+        });
+        splashAnim = requestAnimationFrame(draw);
+      }
+
+      resizeRain();
+      draw();
+      return resizeRain;
+    }
+
+    function initSplash() {
+      const splash = document.getElementById("splash");
+      const app = document.getElementById("appMain");
+      const enterBtn = document.getElementById("enterLabBtn");
+      const resizeRain = startSplashRain();
+      setTimeout(() => enterBtn.classList.add("show"), 2500);
+      enterBtn.addEventListener("click", () => {
+        splash.style.opacity = "0";
+        setTimeout(() => {
+          cancelAnimationFrame(splashAnim);
+          splash.remove();
+          app.style.display = "block";
+          render();
+        }, 600);
+      });
+      return resizeRain;
+    }
+
+    const resizeSplashRain = initSplash();
 
     window.addEventListener("resize", () => {
       const c = document.getElementById("confetti");
-      if (!c.hidden) {
+      if (c && !c.hidden) {
         c.width = window.innerWidth;
         c.height = window.innerHeight;
       }
+      if (typeof resizeSplashRain === "function" && document.getElementById("splash")) resizeSplashRain();
     });
-
-    render();
   </script>
 </body>
 </html>
